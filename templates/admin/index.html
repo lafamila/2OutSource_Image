@@ -1,0 +1,199 @@
+{% with menuList = menuList %}
+{% with menu = menu %}
+{% include "admin/common/header.html" %}
+{% endwith %}
+{% endwith %}
+    <div class="container-fluid">
+        <div class="row">
+
+            <div class="col-md-6 col-xl-4 mb-4">
+                <a href="#">
+                <div class="card shadow border-left-success py-2">
+                    <div class="card-body">
+                        <div class="row align-items-center no-gutters">
+                            <div class="col mr-2">
+                                <div class="text-uppercase text-success font-weight-bold text-xs mb-1"><span>결제</span></div>
+                                <div class="text-dark font-weight-bold h5 mb-0">(<span id="money-table-count">0</span>건)</div>
+                            </div>
+                            <div class="col-auto"><i class="fas fa-dollar-sign fa-2x text-gray-300"></i></div>
+                        </div>
+                    </div>
+                </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-xl-4 mb-4">
+                <a href="/admin/ask">
+                <div class="card shadow border-left-info py-2">
+                    <div class="card-body">
+                        <div class="row align-items-center no-gutters">
+                            <div class="col mr-2">
+                                <div class="text-uppercase text-info font-weight-bold text-xs mb-1"><span>문의글</span></div>
+                                <div class="text-dark font-weight-bold h5 mb-0 mr-3">(<span id="article-table-count">0</span>건)</div>
+                            </div>
+                            <div class="col-auto"><i class="fas fa-clipboard-list fa-2x text-gray-300"></i></div>
+                        </div>
+                    </div>
+                </div>
+                </a>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <div class="row">
+            <div class="col" id="main-col">
+                <div><input type="text" style="width:100%;height:20px;" id="mainTitle" placeholder="제목" disabled/> </div>
+                <div><textarea style="width:100%;height:180px;" id="main" placeholder="공지사항" disabled></textarea></div>
+            </div>
+            <input type="button" class="btn btn-primary" value="저장" id="main-submit"/>
+        </div>
+        <div class="row">
+            <div class="card-body">
+                <div class="table-responsive table mt-2" id="dataTable_div" role="grid" aria-describedby="dataTable_info">
+                    <table class="table my-0" id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>제목</th>
+                                <th>내용</th>
+                                <th>등록일</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 align-self-center">
+                        <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Showing <span id="start">0</span> to <span id="end">0</span> of <span id="recordsTotal">0</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                            <ul class="pagination" id="pagination">
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <script>
+
+
+        var table;
+        reload = function(currentPage){
+
+            $.ajax({
+                url : '/ajax/getMainAll',
+                method : 'get',
+                data : {"page" : currentPage}
+            }).done(function(result){
+                if(table){
+                    table.destroy();
+                }
+                table = $('#dataTable').DataTable( {
+                    paging:  false,
+                    info:   false,
+                    searching: false,
+                    pageLength: 5,
+                    data: result.data,
+                    columns: [
+                        {   data: 'm_sn',
+                            className: 'text-center',
+                            render: function ( data, type, row, meta ) {
+
+                                return meta.settings._iDisplayStart + meta.row + 1;
+                            }
+                        },
+                        {   data: 'm_title',
+                            className: 'text-left',
+                            render: function ( data, type, row ) {
+                                if(data == null || data == ''){
+                                    data = '<strong>입력</strong>';
+                                    return '<span class="change html" data-stand="m_sn" data-sn="'+row.m_sn+'" data-col="m_title" data-table="main">'+data+'</span>';
+                                }
+                                return '<span class="change" data-stand="m_sn" data-sn="'+row.m_sn+'" data-col="m_title" data-table="main">'+data+'</span>';
+                            }
+                        },
+                        {   data: 'm_text',
+                            className: 'text-left',
+                            render: function ( data, type, row ) {
+                                return '<span class="change" data-stand="m_sn" data-sn="'+row.m_sn+'" data-col="m_text" data-table="main">'+data+'</span>';
+                            }
+                         },
+                        {   data: 'regist_dtm',
+                            className: 'text-left',
+                            render: function ( data, type, row ) {
+                                return data.substring(0, 10);
+                            }
+                         },
+                        {   data: 'm_sn',
+                            className: 'text-right',
+                            render: function ( data, type, row ) {
+                                return '<button class="btn btn-primary delete" type="button" data-sn="'+row.m_sn+'" data-col="m_sn" data-table="main">삭제</button>';
+                            }
+                        }
+                    ]
+                } );
+
+                var totalPage = parseInt((result.recordsTotal-1)/10) + 1;
+                $("#start").html(currentPage*10);
+                $("#end").html(currentPage*10 + result.data.length);
+                $("#recordsTotal").html(result.recordsTotal);
+                var html = '';
+                var __class = (currentPage == 0) ? ' disabled' : '';
+                html += '<li class="page-item'+__class+'"><a class="page-link" aria-label="Previous" id="dataTable_previous" aria-controls="dataTable" href="javascript:reload('+(currentPage-1)+');"><span aria-hidden="true">«</span></a></li>';
+                for(let i=0;i < totalPage;i++){
+                    let _class = (i == currentPage) ? " active" : "";
+                    html += '<li class="page-item'+_class+'"><a class="page-link" aria-controls="dataTable"  href="javascript:reload('+i+');">'+(i+1)+'</a></li>';
+                }
+                var __class = (currentPage == (totalPage-1)) ? ' disabled' : '';
+                html += '<li class="page-item'+__class+'"><a class="page-link" aria-label="Next" id="dataTable_next" aria-controls="dataTable"  href="javascript:reload('+(currentPage+1)+');"><span aria-hidden="true">»</span></a></li>';
+
+
+                $("#pagination").html(html);
+            });
+
+        }
+        /*
+        $.ajax({
+            url : '/ajax/getAlerts',
+            method : 'get'
+        }).done(function(result){
+            $("#article-table-count").html(result.articleCount);
+            $("#money-table-count").html(result.moneyCount);
+            $("#order-table-count").html(result.orderedCount);
+        });
+        */
+
+        $("#main-submit").on("click", function(){
+            var title = $("#mainTitle").val();
+            var text = $("#main").val();
+            var params = {"text" : text, "title" : title};
+            $.ajax({
+                url : '/ajax/insertMain',
+                method : 'post',
+                data : params
+            }).done(function(data){
+                if(data.result == 1){
+                    $("#mainTitle").val('');
+                    $("#main").val('');
+                    alert("저장되었습니다.");
+                    $("#main").prop("disabled", true);
+                    $("#mainTitle").prop("disabled", true);
+                    reload(0);
+                }
+            });
+        });
+        $("#main-col").on("dblclick", function(){
+            if($("#main").is(":disabled")){
+                $("#main").prop("disabled", false);
+                $("#mainTitle").prop("disabled", false);
+            }
+        });
+        reload(0);
+
+    </script>
+{% include "admin/common/footer.html" %}

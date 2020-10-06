@@ -1,0 +1,148 @@
+{% with menuList = menuList %}
+{% with menu = menu %}
+{% include "common/header.html" %}
+{% endwith %}
+{% endwith %}
+
+<div class="container" style="margin-top:10vh;">
+
+    <div class="container-fluid">
+        <h2 class="mb-4"><span class="text-dark">공급요청</span></h2>
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <p class="text-primary m-0 font-weight-bold">회원요청목록</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6"></div>
+                    <div class="col-md-6" style="text-align:right;"><button type="button" class="btn btn-primary" id="ask">문의하기</button></div>
+                </div>
+                <div class="table-responsive table mt-2" id="dataTable_div" role="grid" aria-describedby="dataTable_info">
+                    <style>
+                        .table td, .table th {
+                            vertical-align: middle !important;
+                        }
+
+                    </style>
+                    <table class="table my-0" id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>번호</th>
+                                <th>제목</th>
+                                <th>작성자</th>
+                                <th>등록일</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 align-self-center">
+                        <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Showing <span id="start">0</span> to <span id="end">0</span> of <span id="recordsTotal">0</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                            <ul class="pagination" id="pagination">
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <script>
+        openWindowPop = function(url, name){
+            var options = 'top=10, left=10, width=500, height=600, status=no, menubar=no, toolbar=no, resizable=no';
+            window.open(url, name, options);
+        }
+
+        $("#ask").on("click", function(){
+            openWindowPop('/popup/ask', 'ask');
+        });
+
+    </script>
+    <script>
+        var table;
+        reload = function(currentPage){
+
+            $.ajax({
+                url : '/ajax/getArticle',
+                method : 'get',
+                data : {"page" : currentPage}
+            }).done(function(result){
+                if(table){
+                    table.destroy();
+                }
+                table = $('#dataTable').DataTable( {
+                    paging:  false,
+                    info:   false,
+                    searching: false,
+                    pageLength: 5,
+                    data: result.data,
+                    columns: [
+                        {   data: 'a_sn',
+                            className: 'text-center',
+                            render: function ( data, type, row, meta ) {
+
+                                return meta.settings._iDisplayStart + meta.row + 1;
+                            }
+                        },
+                        {   data: 'a_title',
+                            className: 'text-left',
+                            render: function ( data, type, row ) {
+                                return "<span class='show' data-sn='"+row.a_sn+"'>"+data+"</span>";
+                            }
+                        },
+                        {   data: 'u_id',
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                return data;
+                            }
+                        },
+                        {   data: 'regist_dtm',
+                            className: 'text-left',
+                            render: function ( data, type, row ) {
+                                return data.substring(0, 10);
+                            }
+                        },
+                        {   data: 'cnnc',
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                if(data == null){
+                                    return '답변대기';
+                                }
+                                return '<button class="btn btn-primary" onclick="openWindowPop(\'/popup/showAsk?a_sn='+data+'\', \'show\');">답변보기</button>';
+                            }
+                        }
+                    ]
+                } );
+
+                var totalPage = parseInt((result.recordsTotal-1)/10) + 1;
+                $("#start").html(currentPage*10);
+                $("#end").html(currentPage*10 + result.data.length);
+                $("#recordsTotal").html(result.recordsTotal);
+                var html = '';
+                var __class = (currentPage == 0) ? ' disabled' : '';
+                html += '<li class="page-item'+__class+'"><a class="page-link" aria-label="Previous" id="dataTable_previous" aria-controls="dataTable" href="javascript:reload('+(currentPage-1)+');"><span aria-hidden="true">«</span></a></li>';
+                for(let i=0;i < totalPage;i++){
+                    let _class = (i == currentPage) ? " active" : "";
+                    html += '<li class="page-item'+_class+'"><a class="page-link" aria-controls="dataTable"  href="javascript:reload('+i+');">'+(i+1)+'</a></li>';
+                }
+                var __class = (currentPage == (totalPage-1)) ? ' disabled' : '';
+                html += '<li class="page-item'+__class+'"><a class="page-link" aria-label="Next" id="dataTable_next" aria-controls="dataTable"  href="javascript:reload('+(currentPage+1)+');"><span aria-hidden="true">»</span></a></li>';
+
+
+                $("#pagination").html(html);
+            });
+
+        }
+        $(document).on("click", ".show", function(){
+            var sn = $(this).data('sn');
+            openWindowPop('/popup/showAsk?a_sn='+sn, 'showAsk');
+        });
+        reload(0);
+    </script>
+{% include "common/footer.html" %}

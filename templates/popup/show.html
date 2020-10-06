@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Show</title>
+    <script src="{{url_for('static', filename='assets/js/jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='assets/bootstrap/js/bootstrap.min.js')}}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
+</head>
+<body>
+        <div>
+            <input type="hidden" name="a_type" id="a_type"/>
+        </div>
+        <div>
+            <h2 id="title"></h2>
+        </div>
+        <div>
+            <h2 id="content"></h2>
+        </div>
+        <input type="button" id="back" value="돌아가기"/>
+    <script>
+        $("#back").on("click", function(){
+            close();
+        });
+
+        var url = new URL(window.location.href );
+        var a_sn = url.searchParams.get("a_sn");
+        if(a_sn){
+
+            $.ajax({
+                url : '/ajax/showArticle',
+                method: 'post',
+                data : {"a_sn" : a_sn}
+            }).done(function(data){
+                if(data.result == -1 || data.result == 0){
+                    alert(data.msg);
+                    close();
+                }
+                else{
+
+                    var pValue = data.data[0];
+                    $("#a_type").val(pValue.a_type);
+                    $("#title").html(pValue.a_title);
+                    $("#content").html(pValue.a_content);
+                }
+            })
+        }
+    </script>
+</body>
+</html>

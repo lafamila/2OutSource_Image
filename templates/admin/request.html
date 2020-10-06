@@ -1,0 +1,268 @@
+{% with menuList = menuList %}
+{% with menu = menu %}
+{% include "admin/common/header.html" %}
+{% endwith %}
+{% endwith %}
+
+    <div class="container-fluid">
+        <h3 class="text-dark mb-4">고객관리</h3>
+        <div class="row">
+            <div class="col-xl-3 align-self-center" style="text-align: center;">
+                <select style="text-align: center;width: 100%;" id="condition">
+                    <option value="0" selected="">전체</option>
+                    <option value="1">ID</option>
+                    <option value="2">이름</option>
+                    <option value="3">업체명</option>
+                    <option value="4">신청자</option>
+                </select>
+            </div>
+            <div class="col-xl-3 align-self-center" style="text-align: center;"><input type="text" placeholder="검색 내용" style="width: 100%;" id="query"></div>
+            <div class="col-xl-2"><button class="btn btn-primary" type="button" id="goSearch">검색</button></div>
+            <div class="col-xl-2">
+                    <input type="hidden" name="r_sn" id="r_sn">
+            </div>
+        </div>
+
+    <div class="row" id="userListRow" style="display:none;">
+        <div class="container-fluid">
+            <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="false">
+            <div class="carousel-inner row w-100 mx-auto" id="userList">
+            </div>
+            <a class="carousel-control carousel-control-prev" href="#myCarousel" role="button" data-slide="prev">
+            <span type="button" class="btn btn-outline-primary">
+                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-chevron-compact-left" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M9.224 1.553a.5.5 0 0 1 .223.67L6.56 8l2.888 5.776a.5.5 0 1 1-.894.448l-3-6a.5.5 0 0 1 0-.448l3-6a.5.5 0 0 1 .67-.223z"></path>
+                </svg>
+            </span>
+            </a>
+            <a class="carousel-control carousel-control-next" href="#myCarousel" role="button" data-slide="next">
+            <span type="button" class="btn btn-outline-primary">
+                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-chevron-compact-right" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M6.776 1.553a.5.5 0 0 1 .671.223l3 6a.5.5 0 0 1 0 .448l-3 6a.5.5 0 1 1-.894-.448L9.44 8 6.553 2.224a.5.5 0 0 1 .223-.671z"></path>
+                </svg>
+            </span>
+            </a>
+
+
+            </a>
+            </div>
+        </div>
+    </div>
+    <div>
+        <span>
+            <div class="btn-group" role="group">
+                <button class="btn btn-secondary term" type="button" data-term="3">3일</button>
+                <button class="btn btn-secondary term" type="button" data-term="7">7일</button>
+                <button class="btn btn-secondary term" type="button" data-term="15">15일</button>
+                <button class="btn btn-secondary term" type="button" data-term="30">1개월</button>
+                <button class="btn btn-secondary term" type="button" data-term="90">3개월</button>
+                <button class="btn btn-secondary term" type="button" data-term="180">6개월</button>
+            </div>
+        </span>
+        <span>
+
+            <input type="text" id="date-start" class="form-control" value="" style="width:auto;display:inline-block;" disabled> ~ <input type="text" id="date-end" class="form-control" value="" style="width:auto;display:inline-block;">
+
+        </span>
+        <span>
+            <input type="button" class="btn btn-primary" value="적용" id="submit" disabled/>
+        </span>
+    </div>
+    <script>
+        $("#goSearch").on("click", function(){
+            var condition = $("#condition").val();
+            var query = $("#query").val();
+            if(query == "" || query == null){
+                $("#query").focus();
+                alert("검색 내용을 입력해주세요");
+                return false;
+            }
+            if(condition == -1 || condition == "" || condition == null){
+                $("#condition").focus();
+                alert("검색 조건을 선택해주세요");
+                return false;
+            }
+            var params = {"condition" : condition, "query" : query};
+            $.ajax({
+                url : '/ajax/searchUser',
+                method : 'post',
+                data : params
+            }).done(function(data){
+                if(data.result == 1){
+                    alert("검색 성공");
+                    $("#submit").attr("disabled", true);
+                    console.log(data.data);
+                    var html = '';
+                    //html += '<div class="carousel-item col-md-3 active">';
+                    $.each(data.data, function(pIndex, pValue){
+                        var _class = (pIndex == 0) ? ' active' : '';
+                        var r_sn = -1;
+                        if(pValue.r_sn != null){
+                            r_sn = parseInt(pValue.r_sn);
+                        }
+                        html += '<div class="carousel-item col-md-3 userItem'+_class+'" data-sn="'+r_sn+'">';
+                        html += '   <div class="card">';
+                        html += '       <div class="card-body">';
+                        html += '           <h4 class="card-title">'+pValue.u_id+'</h4>';
+                        html += '           <p class="card-text">이름 : '+pValue.u_nm+'</p>';
+                        html += '           <p class="card-text">회사 : '+pValue.u_cp+'</p>';
+                        var r_type = parseInt(pValue.r_type);
+                        var _type = '';
+                        if(r_type == 0)
+                            _type = '무료';
+                        else if(r_type == 1)
+                            _type = '유료';
+
+                        if(_type != ''){
+                            html += '       <p class="card-text">신청 : '+_type+'</p>';
+                            html += '       <p class="card-text">날짜 : '+pValue.dtm+'</p>';
+                        }
+                        html += '       </div>';
+                        html += '   </div>';
+                        html += '</div>';
+                    });
+                    $("#userList").html(html);
+                    $("#userListRow").show();
+                    if(data.data.length <= 4){
+                        $(".carousel-control").hide();
+                    }
+
+
+
+
+                }
+                else{
+                    $("#userListRow").hide();
+                    alert("일치하는 사용자가 없습니다.");
+                }
+            });
+        });
+
+        $(document).on("click", ".userItem", function(){
+            var r_sn = $(this).data('sn');
+            if(parseInt(r_sn) == -1){
+                alert("신청자가 아닙니다.");
+                return;
+            }
+            $(document).find(".userItem").removeClass('selected');
+            $(this).addClass('selected');
+            $("#r_sn").val(r_sn);
+            $("#submit").attr("disabled", false);
+        });
+        $(document).on("click", "#submit", function(){
+            var r_sn = $("#r_sn").val();
+            var end = $("#date-end").val();
+            console.log(r_sn, end);
+            $.ajax({
+                url : '/ajax/processRequest',
+                method : 'POST',
+                data : {'sn' : r_sn, 'end' : end}
+            }).done(function(data){
+                if(data.result == 1){
+                    alert("적용되었습니다.");
+                    $("#goSearch").click();
+                }
+                else{
+                    alert(data.msg);
+                }
+            });
+        });
+
+    </script>
+    <script>
+    setDatepicker = function(id, end='0d'){
+        $(id).datepicker({
+		    format: "yyyy-mm-dd",	//데이터 포맷 형식(yyyy : 년 mm : 월 dd : 일 )
+		    startDate: '-5y',	//달력에서 선택 할 수 있는 가장 빠른 날짜. 이전으로는 선택 불가능 ( d : 일 m : 달 y : 년 w : 주)
+		    endDate: end,	//달력에서 선택 할 수 있는 가장 느린 날짜. 이후로 선택 불가 ( d : 일 m : 달 y : 년 w : 주)
+		    autoclose : true,	//사용자가 날짜를 클릭하면 자동 캘린더가 닫히는 옵션
+		    disableTouchKeyboard : false,	//모바일에서 플러그인 작동 여부 기본값 false 가 작동 true가 작동 안함.
+		    templates : {
+		        leftArrow: '&laquo;',
+		        rightArrow: '&raquo;'
+		    }, //다음달 이전달로 넘어가는 화살표 모양 커스텀 마이징
+		    todayHighlight : true ,	//오늘 날짜에 하이라이팅 기능 기본값 :false
+		    toggleActive : true,	//이미 선택된 날짜 선택하면 기본값 : false인경우 그대로 유지 true인 경우 날짜 삭제
+		    weekStart : 0 ,//달력 시작 요일 선택하는 것 기본값은 0인 일요일
+		});
+    }
+
+    $(function() {
+		var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+        var yyyy = today.getFullYear();
+        today = yyyy+'-'+mm+'-'+dd;
+
+		setDatepicker('#date-end');
+		$('#date-end').val(today);
+		setDatepicker('#date-start', today);
+		$('#date-start').val(today);
+
+	});
+    $('#date-end').on('change', function(){
+        var endDate = $(this).val();
+        var startDate = $('#date-start').val();
+        if(startDate > endDate){
+            $('#date-end').val(startDate);
+        }
+
+    });
+    $('.term').on('click', function(){
+        $('.term').removeClass('btn-primary');
+        $('.term').removeClass('btn-secondary');
+        $('.term').addClass('btn-secondary');
+        $(this).removeClass('btn-secondary');
+        $(this).addClass('btn-primary');
+        var endDate = $('#date-start').val();
+
+        var end = new Date(endDate);
+        var term = parseInt($(this).data('term'));
+        if(term == 3 || term == 7 || term == 15){
+            var start = new Date(end.getTime() + term*24*60*60*1000);
+            var dd = String(start.getDate()).padStart(2, '0');
+            var mm = String(start.getMonth() + 1).padStart(2, '0'); //January is 0!
+            var yyyy = start.getFullYear();
+            var startDate = yyyy+'-'+mm+'-'+dd;
+            $('#date-end').val(startDate);
+        }
+        else{
+            var start = end;
+            start.setMonth(end.getMonth() + parseInt(term/30));
+            var dd = String(start.getDate()).padStart(2, '0');
+            var mm = String(start.getMonth() + 1).padStart(2, '0'); //January is 0!
+            var yyyy = start.getFullYear();
+            var startDate = yyyy+'-'+mm+'-'+dd;
+            $('#date-end').val(startDate);
+        }
+
+    });
+    </script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+          $("#myCarousel").on("slide.bs.carousel", function(e) {
+            var $e = $(e.relatedTarget);
+            var idx = $e.index();
+            var itemsPerSlide = 4;
+            var totalItems = $(".carousel-item").length;
+
+            if (idx >= totalItems - (itemsPerSlide - 1)) {
+              var it = itemsPerSlide - (totalItems - idx);
+              for (var i = 0; i < it; i++) {
+                // append slides to end
+                if (e.direction == "left") {
+                  $(".carousel-item")
+                    .eq(i)
+                    .appendTo(".carousel-inner");
+                } else {
+                  $(".carousel-item")
+                    .eq(0)
+                    .appendTo($(this).find(".carousel-inner"));
+                }
+              }
+            }
+          });
+        });
+    </script>
+{% include "admin/common/footer.html" %}

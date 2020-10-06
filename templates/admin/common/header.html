@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% for m in menuList %}
+        {% if m['menu_name'] == menu %}
+            <title>{{m['menu_label']}}</title>
+        {% endif %}
+    {% endfor %}
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/bootstrap/css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/fonts/fontawesome-all.min.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/css/bootstrap-datepicker.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/css/styles.css')}}">
+    <script src="{{url_for('static', filename='assets/js/jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='assets/bootstrap/js/bootstrap.min.js')}}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
+    <script src="{{url_for('static', filename='assets/js/theme.js')}}"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.20/datatables.min.js"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='assets/js/bootstrap-datepicker.js')}}"></script>
+    <script>
+
+        getDay = function(day){
+            let days = ["일", "월", "화", "수", "목", "금", "토"];
+            return days[day]+"요일";
+        }
+        Number.prototype.format = function(){
+            if(this==0) return 0;
+
+            var reg = /(^[+-]?\d+)(\d{3})/;
+            var n = (this + '');
+
+            while (reg.test(n)) n = n.replace(reg, '$1' + ',' + '$2');
+
+            return n;
+        };
+
+
+        String.prototype.format = function(){
+            var num = parseFloat(this);
+            if( isNaN(num) ) return "0";
+
+            return num.format();
+        };
+
+
+    </script>
+    <style>
+        .text-left{
+            text-align: left;
+        }
+        .text-right{
+            text-align: right;
+        }
+        .text-center{
+            text-align: center;
+        }
+        .change{
+            cursor:pointer;
+        }
+        .change:hover{
+            background-color:#eee;
+            cursor:pointer;
+        }
+        .show{
+            cursor:pointer;
+        }
+        .show:hover{
+            cursor:pointer;
+            background-color:#eee;
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='croppie.css')}}"/>
+    <script type="text/javascript" src="{{url_for('static', filename='croppie.js')}}"></script>
+
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='lib/main.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='lib/main.js')}}"></script>
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <nav class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0">
+            <div class="container-fluid d-flex flex-column p-0">
+                <a class="navbar-brand d-flex justify-content-center align-items-center sidebar-brand m-0" href="#">
+                    <div class="sidebar-brand-icon rotate-n-15"></div>
+                    <div class="sidebar-brand-text mx-3"><span>Brand</span></div>
+                </a>
+                <hr class="sidebar-divider my-0">
+                <ul class="nav navbar-nav text-light" id="accordionSidebar">
+
+
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" href="/admin"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+                    </li>
+                    {% for m in menuList %}
+                    <li class="nav-item" role="presentation">
+                        {% if m['menu_name'] == menu %}
+                        <a class="nav-link active" href="{{m['menu_path']}}"><span>{{m['menu_label']}}</span></a>
+                        {% else %}
+                        <a class="nav-link" href="{{m['menu_path']}}"><span>{{m['menu_label']}}</span></a>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+
+                </ul>
+                <div class="text-center d-none d-md-inline"><button class="btn rounded-circle border-0" id="sidebarToggle" type="button"></button></div>
+            </div>
+        </nav>
+        <div class="d-flex flex-column" id="content-wrapper">
+            <div id="content">
+                <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top">
+                    <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle mr-3" id="sidebarToggleTop" type="button"><i class="fas fa-bars"></i></button>
+                        <form class="form-inline d-none d-sm-inline-block mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                            <div class="input-group">
+                                <div class="input-group-append"></div>
+                            </div>
+                        </form>
+                        <ul class="nav navbar-nav flex-nowrap ml-auto">
+                            <li class="nav-item dropdown d-sm-none no-arrow"><a class="dropdown-toggle nav-link" data-toggle="dropdown" aria-expanded="false" href="#"><i class="fas fa-search"></i></a>
+                                <div class="dropdown-menu dropdown-menu-right p-3 animated--grow-in" role="menu" aria-labelledby="searchDropdown">
+                                    <form class="form-inline mr-auto navbar-search w-100">
+                                        <div class="input-group"><input class="bg-light form-control border-0 small" type="text" placeholder="Search for ...">
+                                            <div class="input-group-append"><button class="btn btn-primary py-0" type="button"><i class="fas fa-search"></i></button></div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown no-arrow mx-1" role="presentation">
+                                <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link" data-toggle="dropdown" aria-expanded="false" href="#"><span class="badge badge-danger badge-counter" id="order-count"></span><i class="fas fa-calendar fa-2x text-gray-300" style="font-size: 16px;"></i></a>
+                                    <div class="dropdown-menu dropdown-menu-right dropdown-list dropdown-menu-right animated--grow-in" role="menu">
+                                        <h6 class="dropdown-header">주문내역</h6>
+                                        <div id="order-list">
+                                        </div>
+                                        <a class="text-center dropdown-item small text-gray-500" href="/admin/order">모든 주문 보기</a>
+                                    </div>
+                    </div>
+                    </li>
+                    <li class="nav-item dropdown no-arrow mx-1" role="presentation">
+                        <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link" data-toggle="dropdown" aria-expanded="false" href="#"><i class="fas fa-dollar-sign fa-2x text-gray-300" style="font-size: 16px;"></i><span class="badge badge-danger badge-counter" id="money-count"></span></a>
+                            <div
+                                class="dropdown-menu dropdown-menu-right dropdown-list dropdown-menu-right animated--grow-in" role="menu">
+                                <h6 class="dropdown-header">예치금내역</h6>
+                                <div id="money-list">
+
+                                </div>
+                                <a class="text-center dropdown-item small text-gray-500" href="/admin/deposit">모든 신청 내역보기</a>
+                            </div>
+            </div>
+            <div class="shadow dropdown-list dropdown-menu dropdown-menu-right" aria-labelledby="alertsDropdown"></div>
+            </li>
+            <li class="nav-item dropdown no-arrow mx-1" role="presentation">
+                <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link" data-toggle="dropdown" aria-expanded="false" href="#"><i class="fas fa-clipboard-list fa-2x text-gray-300" style="font-size: 16px;"></i><span class="badge badge-danger badge-counter" id="article-count"></span></a>
+                    <div
+                        class="dropdown-menu dropdown-menu-right dropdown-list dropdown-menu-right animated--grow-in" role="menu">
+                        <h6 class="dropdown-header">문의내역</h6>
+                        <div id="article-list"></div>
+                        <a class="text-center dropdown-item small text-gray-500" href="/admin/ask">모든 문의 보기</a>
+                    </div>
+        </div>
+        <div class="shadow dropdown-list dropdown-menu dropdown-menu-right" aria-labelledby="alertsDropdown"></div>
+        </li>
+        <li class="nav-item" role="presentation"><a class="nav-link" href="/">쇼핑몰</a></li>
+        <div class="d-none d-sm-block topbar-divider"></div>
+        <li class="nav-item dropdown no-arrow" role="presentation">
+            <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link" data-toggle="dropdown" aria-expanded="false" href="#"><span class="d-none d-lg-inline mr-2 text-gray-600 small">관리자</span></a>
+                <div class="dropdown-menu shadow dropdown-menu-right animated--grow-in"
+                    role="menu">
+
+                        {% if isLogin %}
+                        <span class="dropdown-item" role="presentation" id="logout"><i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>&nbsp;Logout</span>
+                        {% else %}
+                        <a class="dropdown-item" role="presentation" href="/admin/login?menu={{menu}}"><i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>로그인</a>
+                        {% endif %}
+
+                </div>
+            </div>
+        </li>
+        </ul>
+    </div>
+    </nav>
+<body>
+    <script>
+        $("#logout").on("click", function(){
+            $.ajax({
+                url: '/ajax/adminLogout',
+                method: 'POST'
+            }).done(function(data){
+                if(data.result == 1){
+                    setTimeout(function(){
+                        location.reload();
+                    },500);
+                }
+                else{
+                    alert("오류가 발생했습니다");
+                }
+            });
+        });
+    </script>

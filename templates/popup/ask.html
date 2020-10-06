@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ask</title>
+    <script src="{{url_for('static', filename='assets/js/jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='assets/bootstrap/js/bootstrap.min.js')}}"></script>
+    <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.20/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.20/datatables.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
+</head>
+<body>
+    <form action="/ajax/insertArticle" method="post">
+        <div>
+            <input type="hidden" name="a_type" id="a_type" value="0"/>
+        </div>
+        <div>
+            <input type="text" name="a_title" placeholder="제목" style="width:90%;"/>
+        </div>
+        <div>
+            <textarea name="a_content" placeholder="내용" style="width:90%;"></textarea>
+        </div>
+        <input type="submit" id="submit" value="등록"/>
+
+    </form>
+    <script>
+        var url = new URL(window.location.href );
+        var a_sn = url.searchParams.get("a_sn");
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+    <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='lib/main.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='lib/main.js')}}"></script>
+</head>
+<body>
+    <div>
+        <input type="text" name="u_id" id="u_id" placeholder="아이디"/>
+        <input type="password" name="u_pw" id="u_pw" placeholder="비밀번호"/>
+        <div id="login_section">
+            <input type="button" id="login" value="로그인"/>
+        </div>
+    </div>
+
+    <div>
+        <a href="/admin">홈으로</a>
+
+    </div>
+    <script>
+
+        $('#login').on('click', function(){
+            var u_id = $("#u_id").val();
+            var u_pw = $("#u_pw").val();
+            var params = {'u_id' : u_id, 'u_pw' : u_pw};
+            $.ajax({
+                url: '/ajax/adminLogin',
+                method: 'POST',
+                data : params
+            }).done(function(data){
+                if(data.result == 1){
+                    location.href = '/admin/{{menu}}';
+                }
+                else{
+                    alert("아이디와 비밀번호를 확인해주세요.");
+                }
+            });
+
+        });
+
+        $(document).ready(function(){
+            {% if menu != '' %}
+                alert("로그인이 필요합니다");
+            {% endif %}
+        });
+
+    </script>
+
+{% include "admin/common/footer.html" %}

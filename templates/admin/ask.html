@@ -1,0 +1,281 @@
+{% with menuList = menuList %}
+{% with menu = menu %}
+{% include "admin/common/header.html" %}
+{% endwith %}
+{% endwith %}
+    <div class="container-fluid">
+        <h3 class="text-dark mb-4">게시판관리</h3>
+        <div class="row">
+            <table class="table my-0 dataTable no-footer" style="width:100%;margin:20px;">
+                <colgroup>
+                    <col width="50">
+                    <col width="900">
+                </colgroup>
+                <tbody>
+                    <tr>
+                        <th>기간</th>
+                        <td>
+                            <span>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-primary term" type="button" data-term="0">오늘</button>
+                                    <button class="btn btn-secondary term" type="button" data-term="3">3일</button>
+                                    <button class="btn btn-secondary term" type="button" data-term="7">7일</button>
+                                    <button class="btn btn-secondary term" type="button" data-term="30">1개월</button>
+                                </div>
+                            </span>
+                            <span>
+                                <input type="text" id="date-start" class="form-control" value="" style="width:auto;display:inline-block;"> ~ <input type="text" id="date-end" class="form-control" value="" style="width:auto;display:inline-block;">
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>답변상태</th>
+                        <td>
+                            <span id="status">
+                                <span>
+                                    <input type="radio" name="status" value="0" id="status0" checked>
+                                    <label for="status0">전체보기</label>
+                                </span>
+                                <span>
+                                    <input type="radio" name="status" value="1" id="status1">
+                                    <label for="status1">답변 전</label>
+                                </span>
+                                <span>
+                                    <input type="radio" name="status" value="2" id="status2">
+                                    <label for="status2">답변 완료</label>
+                                </span>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="text-center">
+                            <button class="btn btn-primary" id="reload" type="button">조회</button>
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+        </div>
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <p class="text-primary m-0 font-weight-bold">회원 요청 목록</p>
+
+            </div>
+            <div class="card-body">
+                <div class="table-responsive table mt-2" id="dataTable_div" role="grid" aria-describedby="dataTable_info">
+                    <table class="table my-0" id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>번호</th>
+                                <th>제목</th>
+                                <th>작성자</th>
+                                <th>등록일</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 align-self-center">
+                        <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Showing <span id="start">0</span> to <span id="end">0</span> of <span id="recordsTotal">0</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                            <ul class="pagination" id="pagination">
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    setDatepicker = function(id, end='0d'){
+        $(id).datepicker({
+		    format: "yyyy-mm-dd",	//데이터 포맷 형식(yyyy : 년 mm : 월 dd : 일 )
+		    startDate: '-5y',	//달력에서 선택 할 수 있는 가장 빠른 날짜. 이전으로는 선택 불가능 ( d : 일 m : 달 y : 년 w : 주)
+		    endDate: end,	//달력에서 선택 할 수 있는 가장 느린 날짜. 이후로 선택 불가 ( d : 일 m : 달 y : 년 w : 주)
+		    autoclose : true,	//사용자가 날짜를 클릭하면 자동 캘린더가 닫히는 옵션
+		    disableTouchKeyboard : false,	//모바일에서 플러그인 작동 여부 기본값 false 가 작동 true가 작동 안함.
+		    templates : {
+		        leftArrow: '&laquo;',
+		        rightArrow: '&raquo;'
+		    }, //다음달 이전달로 넘어가는 화살표 모양 커스텀 마이징
+		    todayHighlight : true ,	//오늘 날짜에 하이라이팅 기능 기본값 :false
+		    toggleActive : true,	//이미 선택된 날짜 선택하면 기본값 : false인경우 그대로 유지 true인 경우 날짜 삭제
+		    weekStart : 0 ,//달력 시작 요일 선택하는 것 기본값은 0인 일요일
+		});
+    }
+
+    $(function() {
+		var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+        var yyyy = today.getFullYear();
+        today = yyyy+'-'+mm+'-'+dd;
+
+		setDatepicker('#date-end');
+		$('#date-end').val(today);
+		setDatepicker('#date-start', today);
+		$('#date-start').val(today);
+
+	});
+    $('#date-end').on('change', function(){
+        var endDate = $(this).val();
+        var startDate = $('#date-start').val();
+        $('#date-start').datepicker("remove");
+		setDatepicker('#date-start', endDate);
+        if(startDate > endDate){
+            $('#date-start').val(endDate);
+        }
+
+    });
+    $('.term').on('click', function(){
+        $('.term').removeClass('btn-primary');
+        $('.term').removeClass('btn-secondary');
+        $('.term').addClass('btn-secondary');
+        $(this).removeClass('btn-secondary');
+        $(this).addClass('btn-primary');
+        var endDate = $('#date-end').val();
+        var end = new Date(endDate);
+        var term = parseInt($(this).data('term'));
+        if(term == 0 || term == 1){
+            var today = new Date();
+            var dd = String(today.getDate()).padStart(2, '0');
+            var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+            var yyyy = today.getFullYear();
+            var todayStr = yyyy+'-'+mm+'-'+dd;
+
+            var yester = new Date(today - term*(24*60*60*1000))
+            var dd = String(yester.getDate()).padStart(2, '0');
+            var mm = String(yester.getMonth() + 1).padStart(2, '0'); //January is 0!
+            var yyyy = yester.getFullYear();
+            var yesterStr = yyyy+'-'+mm+'-'+dd;
+
+            $('#date-end').val(todayStr);
+            $('#date-start').val(yesterStr);
+        }
+        else if(term == 3 || term == 7 || term == 15){
+            var start = new Date(end-term*(24*60*60*1000));
+            var dd = String(start.getDate()).padStart(2, '0');
+            var mm = String(start.getMonth() + 1).padStart(2, '0'); //January is 0!
+            var yyyy = start.getFullYear();
+            var startDate = yyyy+'-'+mm+'-'+dd;
+            $('#date-start').val(startDate);
+        }
+        else{
+            var start = end;
+            start.setMonth(end.getMonth() - parseInt(term/30));
+            var dd = String(start.getDate()).padStart(2, '0');
+            var mm = String(start.getMonth() + 1).padStart(2, '0'); //January is 0!
+            var yyyy = start.getFullYear();
+            var startDate = yyyy+'-'+mm+'-'+dd;
+            $('#date-start').val(startDate);
+        }
+
+    });
+
+    /////////////////////////////////////////
+
+
+
+    $("#reload").on("click", function(){
+        reload(0);
+    });
+    </script>
+
+    <script>
+        openWindowPop = function(url, name){
+            var options = 'top=10, left=10, width=500, height=600, status=no, menubar=no, toolbar=no, resizable=no';
+            window.open(url, name, options);
+        }
+        var table;
+        reload = function(currentPage){
+            var startDate = $("#date-start").val();
+            var endDate = $("#date-end").val();
+            var status = $("#status").find("input[type=radio]:checked").val();
+            var params = {"page" : currentPage, "start" : startDate, "end" : endDate, "status" : status};
+            $.ajax({
+                url : '/ajax/getOnlyArticle',
+                method : 'get',
+                data : params
+            }).done(function(result){
+                if(table){
+                    table.destroy();
+                }
+                table = $('#dataTable').DataTable( {
+                    paging:  false,
+                    info:   false,
+                    searching: false,
+                    pageLength: 5,
+                    data: result.data,
+                    columns: [
+                        {   data: 'a_sn',
+                            className: 'text-center',
+                            render: function ( data, type, row, meta ) {
+
+                                return meta.settings._iDisplayStart + meta.row + 1;
+                            }
+                        },
+                        {   data: 'a_title',
+                            className: 'text-left',
+                            render: function ( data, type, row ) {
+                                return "<span class='show' data-sn='"+row.a_sn+"'>"+data+"</span>";
+                            }
+                        },
+                        {   data: 'u_id',
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                return data;
+                            }
+                        },
+                        {   data: 'regist_dtm',
+                            className: 'text-left',
+                            render: function ( data, type, row ) {
+                                return data.substring(0, 10);
+                            }
+                        },
+                        {   data: 'a_sn',
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                return '<button class="btn btn-primary" onclick="openWindowPop(\'/popup/ask?a_sn='+data+'\', \'show\');">답변하기</button>';
+                            }
+                        }
+                    ]
+                } );
+
+                var totalPage = parseInt((result.recordsTotal-1)/10) + 1;
+                $("#start").html(currentPage*10);
+                $("#end").html(currentPage*10 + result.data.length);
+                $("#recordsTotal").html(result.recordsTotal);
+                var html = '';
+                var __class = (currentPage == 0) ? ' disabled' : '';
+                html += '<li class="page-item'+__class+'"><a class="page-link" aria-label="Previous" id="dataTable_previous" aria-controls="dataTable" href="javascript:reload('+(currentPage-1)+');"><span aria-hidden="true">«</span></a></li>';
+                for(let i=0;i < totalPage;i++){
+                    let _class = (i == currentPage) ? " active" : "";
+                    html += '<li class="page-item'+_class+'"><a class="page-link" aria-controls="dataTable"  href="javascript:reload('+i+');">'+(i+1)+'</a></li>';
+                }
+                var __class = (currentPage == (totalPage-1)) ? ' disabled' : '';
+                html += '<li class="page-item'+__class+'"><a class="page-link" aria-label="Next" id="dataTable_next" aria-controls="dataTable"  href="javascript:reload('+(currentPage+1)+');"><span aria-hidden="true">»</span></a></li>';
+
+
+                $("#pagination").html(html);
+            });
+
+        }
+
+        $(document).on("click", ".show", function(){
+            var sn = $(this).data('sn');
+            openWindowPop('/popup/showAsk?a_sn='+sn, 'showAsk');
+        });
+
+    </script>
+
+
+{% include "admin/common/footer.html" %}

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>이미지</title>
+
+    <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.20/datatables.min.css"/>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.20/datatables.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='croppie.css')}}"/>
+    <script type="text/javascript" src="{{url_for('static', filename='croppie.js')}}"></script>
+    <script>
+        Number.prototype.format = function(){
+            if(this==0) return 0;
+
+            var reg = /(^[+-]?\d+)(\d{3})/;
+            var n = (this + '');
+
+            while (reg.test(n)) n = n.replace(reg, '$1' + ',' + '$2');
+
+            return n;
+        };
+
+
+        String.prototype.format = function(){
+            var num = parseFloat(this);
+            if( isNaN(num) ) return "0";
+
+            return num.format();
+        };
+
+
+
+
+    </script>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='lib/main.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='lib/main.js')}}"></script>
+</head>
+<body>
+    <style>
+        #origin{
+            width : 300;
+            height : auto;
+        }
+    </style>
+    <script>
+
+        function isJson(str) {
+            try {
+                JSON.parse(str);
+            } catch (e) {
+                return false;
+            }
+            return true;
+        }
+        var pie;
+        getCroppie = function(bound){
+            var w = bound[2] - bound[0];
+            var h = bound[3] - bound[1];
+            var path = $("#path").val();
+                var el = document.getElementById('origin');
+                if(pie){
+                    pie.croppie('destroy');
+                }
+                pie = $('.my-croppie').croppie({
+                    url: path,
+                    viewport: { width: w, height: h },
+                    boundary: { width: 700, height: 1100},
+                    showZoomer: false,
+                    enableResize: true,
+                    enableOrientation: true,
+                    mouseWheelZoom: 'ctrl',
+                    points:bound
+                });
+                $('.my-croppie').on('update.croppie', function(ev, cropData) {
+                    console.log(cropData.points);
+                    var points = cropData.points;
+                    var x1 = parseInt(points[0]);
+                    var y1 = parseInt(points[1]);
+                    var x2 = parseInt(points[2]);
+                    var y2 = parseInt(points[3]);
+                    var bound = [[x1,y1], [x2, y1], [x2, y2], [x1, y2]];
+                    var sendData = document.getElementById("sendString").value;
+                    if(isJson(sendData)){
+                        var data = JSON.parse(sendData);
+                        data['bound'] = bound;
+                        var sendString = JSON.stringify(data);
+                        var elem = window.opener.document.getElementById("sendString");
+                        elem.value = sendString;
+                        var event = new Event('build');
+                        elem.dispatchEvent(event); // 특정 요소에 이벤트를 추가하기
+                    }
+                });
+        }
+        changeCroppie = function(bound){
+            var w = bound[2] - bound[0];
+            var h = bound[3] - bound[1];
+            pie.bind({
+                    boundary: { width: w, height: h },
+                    points:[bound[0],bound[1],w,h]
+            });
+        }
+    </script>
+    <input type="hidden" id="path"/>
+    <input type="hidden" id="sendString"/>
+    <div>
+        <div class="my-croppie"></div>
+        <script>
+            $.ajax({
+                url : '/ajax/getImagePath',
+                method : 'POST',
+                data : {'sn' : {{sn}}}
+            }).done(function(data){
+                if(data.result == 1){
+                    $("#origin").attr("src", data.data.path);
+                    $("#path").val(data.data.path);
+                }
+                else{
+                    alert(data.msg);
+                }
+            });
+            var elem = document.getElementById("sendString");
+            elem.addEventListener('build', function (e) {
+                var sendData = elem.value;
+                var data = JSON.parse(sendData);
+                console.log(data);
+                var min_x = data['bound'][0][0];
+                var min_y = data['bound'][0][1];
+                var max_x = data['bound'][0][0];
+                var max_y = data['bound'][0][1];
+                $.each(data['bound'], function(pI, pV){
+                    if(pV[0] < min_x){
+                        min_x = pV[0];
+                    }
+                    if(pV[1] < min_y){
+                        min_y = pV[1];
+                    }
+                    if(pV[0] > max_x){
+                        max_x = pV[0];
+                    }
+                    if(pV[1] > max_y){
+                        max_y = pV[1];
+                    }
+                });
+                getCroppie([min_x, min_y, max_x, max_y]);
+            }, false);
+        </script>
+    </div>
+</body>
+</html>

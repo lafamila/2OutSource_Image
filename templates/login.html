@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+    <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='lib/main.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='lib/main.js')}}"></script>
+</head>
+<body>
+    <div>
+        <input type="text" name="u_id" id="u_id" placeholder="아이디"/>
+        <input type="password" name="u_pw" id="u_pw" placeholder="비밀번호"/>
+        <input type="text" name="u_pw_check" id="u_pw_check" style="display:none;" placeholder="비밀번호 확인"/>
+        <input type="text" name="u_nm" id="u_nm" style="display:none;" placeholder="이름"/>
+        <input type="text" name="u_cp" id="u_cp" style="display:none;" placeholder="회사"/>
+        <div id="login_section">
+            <input type="button" id="login" value="로그인"/>
+            <input type="button" id="show" value="가입하기"/>
+        </div>
+        <div id="join_section" style="display:none;">
+            <input type="button" id="join" value="가입"/>
+            <input type="button" id="hide" value="로그인하기"/>
+        </div>
+    </div>
+
+    <div>
+        <a href="/">홈으로</a>
+
+    </div>
+    <script>
+        $('#show').on('click', function(){
+            $("#join_section").show();
+            $("#u_pw_check").show();
+            $("#u_nm").show();
+            $("#u_cp").show();
+            $("#login_section").hide();
+        });
+        $('#hide').on('click', function(){
+            $("#join_section").hide();
+            $("#u_pw_check").hide();
+            $("#u_nm").hide();
+            $("#u_cp").hide();
+            $("#login_section").show();
+        });
+        $('#login').on('click', function(){
+            var u_id = $("#u_id").val();
+            var u_pw = $("#u_pw").val();
+            var params = {'u_id' : u_id, 'u_pw' : u_pw};
+            $.ajax({
+                url: '/ajax/login',
+                method: 'POST',
+                data : params
+            }).done(function(data){
+                if(data.result == 1){
+                    location.href = '/{{menu}}';
+                }
+                else{
+                    alert("아이디와 비밀번호를 확인해주세요.");
+                }
+            });
+
+        });
+        $('#join').on('click', function(){
+            var u_id = $("#u_id").val();
+            var u_pw = $("#u_pw").val();
+            var u_pw_check = $("#u_pw_check").val();
+            var u_nm = $("#u_nm").val();
+            var u_cp = $("#u_cp").val();
+            var params = {'u_id' : u_id, 'u_pw' : u_pw, 'u_nm' : u_nm, 'u_cp' : u_cp};
+            if(u_pw == u_pw_check){
+
+                $.ajax({
+                    url: '/ajax/join',
+                    method: 'POST',
+                    data : params
+                }).done(function(data){
+                    if(data.result == 1){
+                        alert("가입 완료되었습니다.");
+                        location.href = '/{{menu}}';
+                    }
+                    else{
+                        alert(data.msg);
+                    }
+                });
+
+            }
+            else{
+                alert("비밀번호가 일치하지 않습니다.");
+            }
+
+        });
+
+        $(document).ready(function(){
+            {% if menu != '' %}
+                alert("로그인이 필요합니다");
+            {% endif %}
+        });
+
+    </script>
+
+{% include "common/footer.html" %}

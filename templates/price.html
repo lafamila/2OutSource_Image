@@ -1,0 +1,84 @@
+{% with menuList = menuList %}
+{% with menu = menu %}
+{% include "common/header.html" %}
+{% endwith %}
+{% endwith %}
+
+
+    <style>
+    div {
+        width: 100%;
+        height: 300px;
+
+        border: 1px solid #000;
+    }
+    div.left {
+        width: 50%;
+        float: left;
+        box-sizing: border-box;
+
+    }
+    div.right {
+        width: 50%;
+        float: right;
+        box-sizing: border-box;
+
+    }
+    </style>
+
+    <div>
+        <div class="left">
+            <h2>무료계정</h2>
+            <p>무료계정 3일 체험판</p>
+            <button id="free" data-type="0" disabled>무료등록</button>
+        </div>
+        <div class="right">
+            <h2>월 요금제</h2>
+            <p>월 15만원</p>
+            <button id="non" data-type="1" disabled>유료등록</button>
+
+        </div>
+    </div>
+    <div>
+        <h1>환불 정책 안내</h1>
+        <h2>...</h2>
+        <h2>...</h2>
+    </div>
+    <script>
+        $.ajax({
+            url:'/ajax/getTp',
+            method:'POST'
+        }).done(function(data){
+            if(data.result == 1){
+                if(data.free == -1){
+                    $("#free").attr("disabled", false);
+                }
+                else{
+                    $("#free").attr("disabled", true);
+                    $("#free").val("체험 완료");
+                }
+
+                if(data.non == 1){
+                    $("#non").attr("disabled", false);
+                }
+                else{
+                    $("#non").attr("disabled", true);
+                }
+            }
+            else{
+                alert("뭔가 잘못되어있습니다.");
+            }
+        });
+        $("#free, #non").on("click", function(){
+            var t_type = $(this).data('type');
+            $.ajax({
+                url:'/ajax/setTp',
+                method:'POST',
+                data : {'type' : t_type}
+            }).done(function(data){
+                alert(data.msg);
+            });
+        });
+    </script>
+
+{% include "common/footer.html" %}

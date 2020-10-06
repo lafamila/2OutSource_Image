@@ -1,0 +1,59 @@
+{% with menuList = menuList %}
+{% with menu = menu %}
+{% include "common/header.html" %}
+{% endwith %}
+{% endwith %}
+<div class="container">
+
+<div class="row">
+    <div class="col-md-12">
+        <h1 style="color:black;">공지사항</h1>
+        <div id="accordion">
+        </div>
+    </div>
+</div>
+
+<hr/>
+<div class="row" style="height:500px;">
+    <div class="col-md-12" id="detail">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/6IdWo49d20o?controls=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+    </div>
+</div>
+</div>
+
+<script>
+
+
+    $.ajax({
+        url : '/ajax/getMain',
+        method : 'get'
+    }).done(function(result){
+        if(result.data.length > 0){
+            var html = '';
+            $.each(result.data, function(pIndex, pValue){
+                if(pIndex >= 5)
+                    return false;
+                html += '<div class="card">';
+                html += '   <div class="card-header" id="heading'+pIndex+'">';
+                html += '       <h5 class="mb-0">';
+                html += '           <button class="btn btn-link" data-toggle="collapse" data-target="#collapse'+pIndex+'" aria-expanded="false" aria-controls="collapseOne">'+pValue.m_title+'</button>';
+                html += '       </h5>';
+                html += '   </div>';
+
+                html += '   <div id="collapse'+pIndex+'" class="collapse" aria-labelledby="heading'+pIndex+'" data-parent="#accordion">';
+                html += '       <div class="card-body">'+pValue.m_text+'</div>';
+                html += '   </div>';
+                html += '</div>';
+
+            });
+            $("#accordion").html(html);
+        }
+        else{
+            $("#accordion").html("");
+        }
+    });
+</script>
+
+
+{% include "common/footer.html" %}
