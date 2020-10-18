@@ -20,3 +20,29 @@ nav ul li a{
 .text-center{
     text-align: center;
 }
+
+.card-header {
+    color:#222;
+    background-color:#f8f8f8;
+}
+.card-header .btn-link {
+    color:inherit;
+    background-color:inherit;
+}
+
+.card-header:hover, .card *[aria-expanded="true"] {
+    cursor:pointer;
+    background-color:#666;
+    color:white!important;
+}
+.card-header .btn-link:hover {
+    text-decoration:none;
+    color:white;
+}
+
+.card-header .btn:focus {
+    outline: 0;
+    box-shadow: none;
+    text-decoration:none;
+    color:white;
+}

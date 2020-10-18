@@ -37,12 +37,6 @@
     <script type="text/javascript" src="{{url_for('static', filename='lib/main.js')}}"></script>
 </head>
 <body>
-    <style>
-        #origin{
-            width : 300;
-            height : auto;
-        }
-    </style>
     <script>
 
         function isJson(str) {
@@ -58,7 +52,6 @@
             var w = bound[2] - bound[0];
             var h = bound[3] - bound[1];
             var path = $("#path").val();
-                var el = document.getElementById('origin');
                 if(pie){
                     pie.croppie('destroy');
                 }
@@ -112,7 +105,6 @@
                 data : {'sn' : {{sn}}}
             }).done(function(data){
                 if(data.result == 1){
-                    $("#origin").attr("src", data.data.path);
                     $("#path").val(data.data.path);
                 }
                 else{

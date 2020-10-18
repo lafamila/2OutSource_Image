@@ -3,11 +3,20 @@
 {% include "common/header.html" %}
 {% endwith %}
 {% endwith %}
+
+<style>
+.video-wrapper {position: relative; padding-bottom: 56.25%; /* 16:9 */  padding-top: 25px;}
+.video-wrapper iframe {position: absolute; top: 0; left: 0; width: 100%; height: 100%;}
+
+
+
+</style>
+
 <div class="container">
 
 <div class="row">
     <div class="col-md-12">
-        <h1 style="color:black;">공지사항</h1>
+        <h1 class="my-4">공지사항</h1>
         <div id="accordion">
         </div>
     </div>
@@ -16,9 +25,12 @@
 <hr/>
 <div class="row" style="height:500px;">
     <div class="col-md-12" id="detail">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/6IdWo49d20o?controls=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <div class="video-wrapper">
+          <iframe src="https://www.youtube.com/embed/6IdWo49d20o?controls=0&amp;autoplay=1&amp;html5=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+        </div>
 
     </div>
+
 </div>
 </div>
 
@@ -35,7 +47,7 @@
                 if(pIndex >= 5)
                     return false;
                 html += '<div class="card">';
-                html += '   <div class="card-header" id="heading'+pIndex+'">';
+                html += '   <div class="card-header btn-link" id="heading'+pIndex+'" data-toggle="collapse" data-target="#collapse'+pIndex+'" aria-expanded="false" aria-controls="collapseOne">';
                 html += '       <h5 class="mb-0">';
                 html += '           <button class="btn btn-link" data-toggle="collapse" data-target="#collapse'+pIndex+'" aria-expanded="false" aria-controls="collapseOne">'+pValue.m_title+'</button>';
                 html += '       </h5>';

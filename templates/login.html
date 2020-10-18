@@ -1,48 +1,83 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>로그인</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/bootstrap/css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/css/Navigation-with-Button.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/css/styles.css')}}">
     <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='lib/main.css')}}">
     <script type="text/javascript" src="{{url_for('static', filename='lib/main.js')}}"></script>
 </head>
+
 <body>
-    <div>
-        <input type="text" name="u_id" id="u_id" placeholder="아이디"/>
-        <input type="password" name="u_pw" id="u_pw" placeholder="비밀번호"/>
-        <input type="text" name="u_pw_check" id="u_pw_check" style="display:none;" placeholder="비밀번호 확인"/>
-        <input type="text" name="u_nm" id="u_nm" style="display:none;" placeholder="이름"/>
-        <input type="text" name="u_cp" id="u_cp" style="display:none;" placeholder="회사"/>
-        <div id="login_section">
-            <input type="button" id="login" value="로그인"/>
-            <input type="button" id="show" value="가입하기"/>
+    <nav class="navbar navbar-light navbar-expand-md navigation-clean-button">
+        <div class="container"><a class="navbar-brand" href="/">Company Name</a><button data-toggle="collapse" class="navbar-toggler" data-target="#navcol-1"><span class="sr-only">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse"
+                id="navcol-1">
+                <ul class="nav navbar-nav mr-auto">
+
+
+                </ul>
+
+            </div>
         </div>
-        <div id="join_section" style="display:none;">
-            <input type="button" id="join" value="가입"/>
-            <input type="button" id="hide" value="로그인하기"/>
-        </div>
-    </div>
+    </nav>
 
     <div>
-        <a href="/">홈으로</a>
+        <div class="container">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Login</h4></div>
+            <div class="modal-body">
 
+                <form method="post">
+                    <h2 class="sr-only">Login Form</h2>
+                    <div class="illustration"><i class="icon ion-ios-navigate"></i></div>
+                    <div class="form-group"><input class="form-control" type="text" name="u_id" id="u_id" placeholder="ID" /></div>
+                    <div class="form-group"><input class="form-control" type="password" name="u_pw" id="u_pw" placeholder="Password" /></div>
+                    <div class="form-group" id="u_pw_Toggle" style="display:none;"><input class="form-control" type="password" name="u_pw_check" id="u_pw_check" placeholder="Password Again" /></div>
+                    <div class="form-group" id="u_name_Toggle" style="display:none;"><input class="form-control" type="text" name="u_nm" id="u_nm" placeholder="Name" /></div>
+
+                    <div class="form-group" id="u_cp_Toggle" style="display:none;"><input class="form-control" type="text" name="u_cp" id="u_cp" placeholder="Company"/></div>
+                    <div class="form-group" id="login_section"><button class="btn btn-primary btn-block" type="submit" id="login">로그인</button></div>
+                    <div class="form-group" id="join_section" style="display:none;"><button class="btn btn-primary btn-block" type="submit" id="join">가입하기</button></div>
+                </form>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" type="button" id="show">회원가입</button>
+                <button class="btn btn-primary" type="button" id="hide" style="display:none;">뒤로</button>
+            </div>
+        </div>
+        </div>
     </div>
+    <script src="{{url_for('static', filename='assets/js/jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='assets/bootstrap/js/bootstrap.min.js')}}"></script>
     <script>
         $('#show').on('click', function(){
             $("#join_section").show();
-            $("#u_pw_check").show();
-            $("#u_nm").show();
-            $("#u_cp").show();
+            $("#u_name_Toggle").show();
+            $("#u_pw_Toggle").show();
+            $("#u_cp_Toggle").show();
             $("#login_section").hide();
+            $("#show").hide();
+            $("#hide").show();
+
         });
         $('#hide').on('click', function(){
             $("#join_section").hide();
-            $("#u_pw_check").hide();
-            $("#u_nm").hide();
-            $("#u_cp").hide();
+            $("#u_name_Toggle").hide();
+            $("#u_pw_Toggle").hide();
+            $("#u_cp_Toggle").hide();
             $("#login_section").show();
+            $("#show").show();
+            $("#hide").hide();
         });
+
         $('#login').on('click', function(){
             var u_id = $("#u_id").val();
             var u_pw = $("#u_pw").val();
@@ -90,13 +125,12 @@
             }
 
         });
-
-        $(document).ready(function(){
-            {% if menu != '' %}
-                alert("로그인이 필요합니다");
-            {% endif %}
-        });
-
     </script>
+</body>
 
-{% include "common/footer.html" %}
+</html>
+
+
+
+
+

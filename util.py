@@ -10,7 +10,15 @@ def loginCheck(session):
 def adminLoginCheck(session):
     return 'admin' in session
 
-
+def getLoginId(session):
+    if not loginCheck(session):
+        return None
+    db = DB(host='localhost', user='root', password=PW, db='image')
+    users = db("SELECT * FROM user WHERE U_SN=%s", session['u_sn'])
+    if users:
+        return users[0]['u_id']
+    else:
+        return None
 class DB:
     RESULT_EXIST = 0
     RESULT_EXIST_ID = 1

@@ -240,6 +240,13 @@ def insertMain():
     return jsonify({"result" : 1})
 
 
+@fp.route('/showInfo', methods=['POST'])
+def showInfo():
+    u_sn = session['u_sn']
+    data = db("SELECT * FROM user WHERE U_SN=%s", u_sn)
+    return jsonify({"result" : 1, "data" : data})
+
+
 @fp.route("/join", methods=['POST'])
 def join():
     u_id = request.form.get('u_id')

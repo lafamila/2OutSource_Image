@@ -4,113 +4,160 @@
 {% endwith %}
 {% endwith %}
 
-    <script>
+  <div class="container">
+    <h1 class="mt-4 mb-3">이미지 번역
+      <small>이미지 번역하기</small>
+    </h1>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+          이미지를 아래 구역에 드래그&드롭하고 업로드 버튼을 눌러주세요. 번역된 텍스트를 지정하면 해당 영역을 수정할 수 있습니다.
+      </li>
+    </ol>
+  </div>
 
-    </script>
-    <form id="ajaxFrom" method="post">
-       <input type="file" id="ajaxFile" onChange="ajaxFileChange();" style="display:none;"/>
+
+    <form name="uploadForm" id="uploadForm" enctype="multipart/form-data" method="post">
+        <table class="table" width="100%" border="1px">
+            <tbody id="fileTableTbody">
+                <tr>
+                    <td id="dropZone" style="height:250px;text-align:center;vertical-align:middle;">
+                        파일을 드래그 하세요
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </form>
-    <button class="btn" onClick="ajaxFileUpload();">업로드</button>
 
-    <table id="results" style="display:none;">
-        <tbody>
+    <a href="#" onclick="uploadFile(); return false;" class="btn bg_01">파일 업로드</a>
 
-        </tbody>
-        <tfoot>
-            <tr>
-                <td><input type="button" value="적용" id="submit"></td>
-            </tr>
-            <tr>
-                <a href="/ajax/getResultImage" id="download" style="display:none;">Download!</a>
-            </tr>
-        </tfoot>
+    <div class="d-flex justify-content-center" style="display:none!important;" id="loading">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
 
-    </table>
+    <div class="container">
     <input type="hidden" id="sendString"/>
+    <input type="hidden" id="path"/>
     <input type="hidden" id="sn"/>
+        <div class="row">
+          <div class="col-lg-6">
+            <div>
+                <div class="my-croppie"></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <table id="results" style="display:none;width:100%">
+                <colgroup>
+                    <col width="30">
+                    <col width="70">
+                </colgroup>
+                <thead>
+
+                </thead>
+                <tbody>
+
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td>폰트 지정<form id="ajaxFrom" method="post"><input type="file" id="fontFile" style="width:100%"/></form></td>
+                        <td style="text-align:right;"><input type="button" value="적용" id="submit"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align:right;">
+                            <a href="/ajax/getResultImage" id="download" style="display:none;">Download!</a>
+                        </td>
+                    </tr>
+                </tfoot>
+
+            </table>
+          </div>
+        </div>
+
+
+    </div>
+
+
+
 
     <script>
         var pResult = [];
-        var win;
-        function ajaxFileUpload() {
-            $("#ajaxFile").click();
-        }
-
-        function ajaxFileChange() {
-            ajaxFileTransmit();
-        }
-
-        function ajaxFileTransmit() {
-            var form = $("ajaxFrom")[0];
-            var formData = new FormData(form);
-            formData.append("file", $("#ajaxFile")[0].files[0]);
-
-            $.ajax({
-                url : "/ajax/uploadImage",
-                type : "POST",
-                processData : false,
-                contentType : false,
-                data : formData
-            }).done(function(result){
-                if(result.result == 1){
-                    alert(result.msg);
-                    $("#ajaxFile").val("");
-                    $("#sn").val(result.sn);
-                    $.ajax({
-                        url : '/ajax/imageProcess',
-                        method : 'POST',
-                        data : {'sn' : result.sn}
-                    }).done(function(data){
-                        if(data.result == 1){
-                            win = window.open("/popup/image?sn="+result.sn, "PopupWin", "width=800,height=1200");
-                            pResult = data.data;
-                            var html = '';
-                            $.each(pResult, function(pIndex, pValue){
-                                html += '<tr>';
-                                html += '    <td>'+pValue[0]+'</td>';
-                                html += '    <td><input type="text" class="result-input" data-idx="'+pIndex+'" value="'+pValue[2]+'"/></td>';
-                                html += '</tr>';
-                            });
-                            $("#results").find("tbody").html(html);
-                            $("#results").show();
-                            $("#results").find(".result-input").eq(0).focus();
-                        }
-                        else{
-                            alert(data.msg);
-                        }
-                    });
+        var nowData;
+        var pie;
+        getCroppie = function(bound){
+            var w = bound[2] - bound[0];
+            var h = bound[3] - bound[1];
+            var path = $("#path").val();
+                if(pie){
+                    pie.croppie('destroy');
                 }
-                else{
-                    alert(result.msg);
-                }
+                pie = $('.my-croppie').croppie({
+                    url: path,
+                    viewport: { width: w, height: h },
+                    boundary: { width: 400, height: 600},
+                    showZoomer: false,
+                    enableResize: true,
+                    enableOrientation: true,
+                    mouseWheelZoom: 'ctrl',
+                    points:bound
+                });
+                $('.my-croppie').on('update.croppie', function(ev, cropData) {
+                    console.log(cropData.points);
+                    var points = cropData.points;
+                    var x1 = parseInt(points[0]);
+                    var y1 = parseInt(points[1]);
+                    var x2 = parseInt(points[2]);
+                    var y2 = parseInt(points[3]);
+                    var bound = [[x1,y1], [x2, y1], [x2, y2], [x1, y2]];
+                    if(nowData){
+
+                        var data = nowData;
+                        data['bound'] = bound;
+                        pResult[data['index']][1] = data['bound'];
+
+
+                    }
+                });
+        }
+        changeCroppie = function(bound){
+            var w = bound[2] - bound[0];
+            var h = bound[3] - bound[1];
+            pie.bind({
+                    boundary: { width: w, height: h },
+                    points:[bound[0],bound[1],w,h]
             });
         }
 
+
+    </script>
+    <script>
         $(document).on('focus', '.result-input', function(){
             var idx = $(this).data('idx');
-            var sendString = JSON.stringify({'index':idx, 'bound':pResult[idx][1]});
-            if(win){
-                try{
-                win.document.getElementById("sendString").value = sendString;
-
-                var event = new Event('build');
-                win.document.getElementById("sendString").dispatchEvent(event); // 특정 요소에 이벤트를 추가하기
+            nowData = {'index':idx, 'bound':pResult[idx][1]};
+            var data = nowData;
+            var min_x = data['bound'][0][0];
+            var min_y = data['bound'][0][1];
+            var max_x = data['bound'][0][0];
+            var max_y = data['bound'][0][1];
+            $.each(data['bound'], function(pI, pV){
+                if(pV[0] < min_x){
+                    min_x = pV[0];
                 }
-                catch (e) {
+                if(pV[1] < min_y){
+                    min_y = pV[1];
                 }
-            }
+                if(pV[0] > max_x){
+                    max_x = pV[0];
+                }
+                if(pV[1] > max_y){
+                    max_y = pV[1];
+                }
+            });
+            getCroppie([min_x, min_y, max_x, max_y]);
         });
 
-        var elem = document.getElementById("sendString");
-        elem.addEventListener('build', function (e) {
-            console.log("before >>>", pResult);
-            var sendData = elem.value;
-            var data = JSON.parse(sendData);
-            pResult[data['index']][1] = data['bound'];
-            console.log("update >>>", pResult);
-        }, false);
+
         $("#submit").on("click", function(){
-            win.close();
             var sn = $("#sn").val();
             var inputs = $("#results").find(".result-input");
             $.each(inputs, function(pIndex, pValue){
@@ -134,5 +181,223 @@
                 }
             });
         });
+
     </script>
+
+    <script type="text/javascript">
+
+        // 파일 리스트 번호
+        var fileIndex = 0;
+        // 등록할 전체 파일 사이즈
+        var totalFileSize = 0;
+        // 파일 리스트
+        var fileList = new Array();
+        // 파일 사이즈 리스트
+        var fileSizeList = new Array();
+        // 등록 가능한 파일 사이즈 MB
+        var uploadSize = 50;
+        // 등록 가능한 총 파일 사이즈 MB
+        var maxUploadSize = 500;
+
+        $(function (){
+            // 파일 드롭 다운
+            fileDropDown();
+        });
+
+        // 파일 드롭 다운
+        function fileDropDown(){
+            var dropZone = $("#dropZone");
+            //Drag기능
+            dropZone.on('dragenter',function(e){
+                e.stopPropagation();
+                e.preventDefault();
+                // 드롭다운 영역 css
+                dropZone.css('background-color','#E3F2FC');
+            });
+            dropZone.on('dragleave',function(e){
+                e.stopPropagation();
+                e.preventDefault();
+                // 드롭다운 영역 css
+                dropZone.css('background-color','#FFFFFF');
+            });
+            dropZone.on('dragover',function(e){
+                e.stopPropagation();
+                e.preventDefault();
+                // 드롭다운 영역 css
+                dropZone.css('background-color','#E3F2FC');
+            });
+            dropZone.on('drop',function(e){
+                e.preventDefault();
+                // 드롭다운 영역 css
+                dropZone.css('background-color','#FFFFFF');
+
+                var files = e.originalEvent.dataTransfer.files;
+                if(files != null){
+                    if(files.length < 1){
+                        alert("폴더 업로드 불가");
+                        return;
+                    }
+                    selectFile(files)
+                }else{
+                    alert("ERROR");
+                }
+            });
+        }
+
+        // 파일 선택시
+        function selectFile(files){
+            // 다중파일 등록
+            if(files != null){
+                for(var i = 0; i < files.length; i++){
+                    // 파일 이름
+                    var fileName = files[i].name;
+                    var fileNameArr = fileName.split("\.");
+                    // 확장자
+                    var ext = fileNameArr[fileNameArr.length - 1];
+                    // 파일 사이즈(단위 :MB)
+                    var fileSize = files[i].size / 1024 / 1024;
+
+                    if($.inArray(ext, ['exe', 'bat', 'sh', 'java', 'jsp', 'html', 'js', 'css', 'xml']) >= 0){
+                        // 확장자 체크
+                        alert("등록 불가 확장자");
+                        break;
+                    }else if(fileSize > uploadSize){
+                        // 파일 사이즈 체크
+                        alert("용량 초과\n업로드 가능 용량 : " + uploadSize + " MB");
+                        break;
+                    }else{
+                        // 전체 파일 사이즈
+                        totalFileSize += fileSize;
+
+                        // 파일 배열에 넣기
+                        fileList[fileIndex] = files[i];
+
+                        // 파일 사이즈 배열에 넣기
+                        fileSizeList[fileIndex] = fileSize;
+
+                        // 업로드 파일 목록 생성
+                        addFileList(fileIndex, fileName, fileSize);
+
+                        // 파일 번호 증가
+                        fileIndex++;
+                    }
+                }
+            }else{
+                alert("ERROR");
+            }
+        }
+
+        // 업로드 파일 목록 생성
+        function addFileList(fIndex, fileName, fileSize){
+            var html = "";
+            html += "<tr id='fileTr_" + fIndex + "'>";
+            html += "    <td class='left' >";
+            html +=         fileName + " / " + fileSize + "MB "  + "<a href='#' onclick='deleteFile(" + fIndex + "); return false;' class='btn small bg_02'>삭제</a>"
+            html += "    </td>"
+            html += "</tr>"
+
+            $('#fileTableTbody').append(html);
+        }
+
+        // 업로드 파일 삭제
+        function deleteFile(fIndex){
+            // 전체 파일 사이즈 수정
+            totalFileSize -= fileSizeList[fIndex];
+
+            // 파일 배열에서 삭제
+            delete fileList[fIndex];
+
+            // 파일 사이즈 배열 삭제
+            delete fileSizeList[fIndex];
+
+            // 업로드 파일 테이블 목록에서 삭제
+            $("#fileTr_" + fIndex).remove();
+        }
+
+        // 파일 등록
+        function uploadFile(){
+            // 등록할 파일 리스트
+            var uploadFileList = Object.keys(fileList);
+
+            // 파일이 있는지 체크
+            if(uploadFileList.length == 0){
+                // 파일등록 경고창
+                alert("파일이 없습니다.");
+                return;
+            }
+
+            // 용량을 500MB를 넘을 경우 업로드 불가
+            if(totalFileSize > maxUploadSize){
+                // 파일 사이즈 초과 경고창
+                alert("총 용량 초과\n총 업로드 가능 용량 : " + maxUploadSize + " MB");
+                return;
+            }
+
+            if(confirm("등록 하시겠습니까?")){
+                // 등록할 파일 리스트를 formData로 데이터 입력
+                var form = $('#uploadForm')[0];
+                var formData = new FormData(form);
+                for(var i = 0; i < uploadFileList.length; i++){
+                    formData.append('files', fileList[uploadFileList[i]]);
+                }
+                formData.append("file", fileList[0]);
+                $.ajax({
+                    url : "/ajax/uploadImage",
+                    type : "POST",
+                    processData : false,
+                    contentType : false,
+                    data : formData
+                }).done(function(result){
+                    if(result.result == 1){
+                        alert(result.msg);
+                        $("#ajaxFile").val("");
+                        $("#sn").val(result.sn);
+                        $("#loading").show();
+                        $.ajax({
+                            url : '/ajax/imageProcess',
+                            method : 'POST',
+                            data : {'sn' : result.sn}
+                        }).done(function(data){
+                            $("#loading").attr("style", "display: none !important");
+                            if(data.result == 1){
+                                pResult = data.data;
+                                var html = '';
+                                $.each(pResult, function(pIndex, pValue){
+                                    html += '<tr>';
+                                    html += '    <td>'+pValue[0]+'</td>';
+                                    html += '    <td><input type="text" style="width:100%;" class="result-input" data-idx="'+pIndex+'" value="'+pValue[2]+'"/></td>';
+                                    html += '</tr>';
+                                });
+                                $("#results").find("tbody").html(html);
+                                $("#results").show();
+                                var sn = $("#sn").val();
+                                $.ajax({
+                                    url : '/ajax/getImagePath',
+                                    method : 'POST',
+                                    data : {'sn' : sn}
+                                }).done(function(pData){
+                                    if(pData.result == 1){
+                                        $("#path").val(pData.data.path);
+                                    }
+                                    else{
+                                        alert(pData.msg);
+                                    }
+                                });
+
+                            }
+                            else{
+                                alert(data.msg);
+                            }
+                        });
+                    }
+                    else{
+                        alert(result.msg);
+                    }
+                });
+            }
+        }
+    </script>
+
+
+
 {% include "common/footer.html" %}

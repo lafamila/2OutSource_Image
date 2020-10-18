@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, abort, session, redirect, request
-from util import DB, loginCheck, SECRET_KEY, PW
+from util import DB, loginCheck, SECRET_KEY, PW, getLoginId
 
 bp = Blueprint('template', __name__, url_prefix='/')
 bp.secret_key = SECRET_KEY
@@ -15,7 +15,8 @@ def render(menu_name=''):
     menu_list = db("SELECT * FROM menu ORDER BY MENU_ORDR")
     isLogin = loginCheck(session)
     if menu_name == '':
-        return render_template('index.html', menu='', menuList=menu_list, isLogin=isLogin)
+        u_id = getLoginId(session)
+        return render_template('index.html', menu='', menuList=menu_list, isLogin=isLogin, u_id=u_id)
 
     isMenu = False
     for m in menu_list:
@@ -24,13 +25,14 @@ def render(menu_name=''):
 
     if isMenu:
         if isLogin:
-            return render_template('{}.html'.format(menu_name), menu=menu_name, menuList=menu_list, isLogin=isLogin)
+            u_id = getLoginId(session)
+            return render_template('{}.html'.format(menu_name), menu=menu_name, menuList=menu_list, isLogin=isLogin, u_id=u_id)
         else:
             return redirect('/login?menu={}'.format(menu_name))
     else:
         abort(404)
 
-@bp.route("/login")
+@bp.route("/login", methods=['GET', 'POST'])
 def login():
     menu = request.args.get('menu')
     isLogin = loginCheck(session)

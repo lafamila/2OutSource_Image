@@ -1,0 +1,138 @@
+{% with menuList = menuList %}
+{% with menu = menu %}
+{% include "common/header.html" %}
+{% endwith %}
+{% endwith %}
+
+    <script>
+
+    </script>
+    <form id="ajaxFrom" method="post">
+       <input type="file" id="ajaxFile" onChange="ajaxFileChange();" style="display:none;"/>
+    </form>
+    <button class="btn" onClick="ajaxFileUpload();">업로드</button>
+
+    <table id="results" style="display:none;">
+        <tbody>
+
+        </tbody>
+        <tfoot>
+            <tr>
+                <td><input type="button" value="적용" id="submit"></td>
+            </tr>
+            <tr>
+                <a href="/ajax/getResultImage" id="download" style="display:none;">Download!</a>
+            </tr>
+        </tfoot>
+
+    </table>
+    <input type="hidden" id="sendString"/>
+    <input type="hidden" id="sn"/>
+
+    <script>
+        var pResult = [];
+        var win;
+        function ajaxFileUpload() {
+            $("#ajaxFile").click();
+        }
+
+        function ajaxFileChange() {
+            ajaxFileTransmit();
+        }
+
+        function ajaxFileTransmit() {
+            var form = $("ajaxFrom")[0];
+            var formData = new FormData(form);
+            formData.append("file", $("#ajaxFile")[0].files[0]);
+
+            $.ajax({
+                url : "/ajax/uploadImage",
+                type : "POST",
+                processData : false,
+                contentType : false,
+                data : formData
+            }).done(function(result){
+                if(result.result == 1){
+                    alert(result.msg);
+                    $("#ajaxFile").val("");
+                    $("#sn").val(result.sn);
+                    $.ajax({
+                        url : '/ajax/imageProcess',
+                        method : 'POST',
+                        data : {'sn' : result.sn}
+                    }).done(function(data){
+                        if(data.result == 1){
+                            win = window.open("/popup/image?sn="+result.sn, "PopupWin", "width=800,height=1200");
+                            pResult = data.data;
+                            var html = '';
+                            $.each(pResult, function(pIndex, pValue){
+                                html += '<tr>';
+                                html += '    <td>'+pValue[0]+'</td>';
+                                html += '    <td><input type="text" class="result-input" data-idx="'+pIndex+'" value="'+pValue[2]+'"/></td>';
+                                html += '</tr>';
+                            });
+                            $("#results").find("tbody").html(html);
+                            $("#results").show();
+                            $("#results").find(".result-input").eq(0).focus();
+                        }
+                        else{
+                            alert(data.msg);
+                        }
+                    });
+                }
+                else{
+                    alert(result.msg);
+                }
+            });
+        }
+
+        $(document).on('focus', '.result-input', function(){
+            var idx = $(this).data('idx');
+            var sendString = JSON.stringify({'index':idx, 'bound':pResult[idx][1]});
+            if(win){
+                try{
+                win.document.getElementById("sendString").value = sendString;
+
+                var event = new Event('build');
+                win.document.getElementById("sendString").dispatchEvent(event); // 특정 요소에 이벤트를 추가하기
+                }
+                catch (e) {
+                }
+            }
+        });
+
+        var elem = document.getElementById("sendString");
+        elem.addEventListener('build', function (e) {
+            console.log("before >>>", pResult);
+            var sendData = elem.value;
+            var data = JSON.parse(sendData);
+            pResult[data['index']][1] = data['bound'];
+            console.log("update >>>", pResult);
+        }, false);
+        $("#submit").on("click", function(){
+            win.close();
+            var sn = $("#sn").val();
+            var inputs = $("#results").find(".result-input");
+            $.each(inputs, function(pIndex, pValue){
+                var idx = $(pValue).data('idx');
+                pResult[idx][2] = $(pValue).val();
+            });
+            $.ajax({
+                url : '/ajax/generateImage',
+                method : 'POST',
+                contentType : 'application/json',
+                dataType : 'json',
+                data : JSON.stringify({'sn' : sn, 'data' : pResult})
+            }).done(function(data){
+                if(data.result == 1){
+                    var href = $("#download").attr("href");
+                    $("#download").attr("href", href+"?sn="+data.sn);
+                    $("#download").show();
+                }
+                else{
+                    alert(data.msg);
+                }
+            });
+        });
+    </script>
+{% include "common/footer.html" %}

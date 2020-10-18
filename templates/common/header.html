@@ -1,77 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    {% for m in menuList %}
-        {% if m['menu_name'] == menu %}
-            <title>{{m['menu_label']}}</title>
-        {% endif %}
-    {% endfor %}
-    <script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.20/datatables.min.css"/>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  {% for m in menuList %}
+      {% if m['menu_name'] == menu %}
+          <title>{{m['menu_label']}}</title>
+      {% endif %}
+  {% endfor %}
+  <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/fonts/fontawesome-all.min.css')}}">
+
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/bootstrap/css/bootstrap.min.css')}}">
+    <link href="{{url_for('static', filename='assets/css/modern-business.css')}}" rel="stylesheet">
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/css/Navigation-with-Button.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/css/styles.css')}}">
+    <script src="{{url_for('static', filename='assets/js/jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='assets/bootstrap/js/bootstrap.min.js')}}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
+    <script src="{{url_for('static', filename='assets/js/theme.js')}}"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.20/datatables.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='croppie.css')}}"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.20/datatables.min.css"/>
     <script type="text/javascript" src="{{url_for('static', filename='croppie.js')}}"></script>
-    <script>
-        Number.prototype.format = function(){
-            if(this==0) return 0;
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='croppie.css')}}"/>
 
-            var reg = /(^[+-]?\d+)(\d{3})/;
-            var n = (this + '');
-
-            while (reg.test(n)) n = n.replace(reg, '$1' + ',' + '$2');
-
-            return n;
-        };
-
-
-        String.prototype.format = function(){
-            var num = parseFloat(this);
-            if( isNaN(num) ) return "0";
-
-            return num.format();
-        };
+    <link rel="stylesheet" href="{{url_for('static', filename='assets/css/bootstrap-datepicker.css')}}">
+    <script type="text/javascript" src="{{url_for('static', filename='assets/js/bootstrap-datepicker.js')}}"></script>
 
 
 
 
-    </script>
-    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='lib/main.css')}}">
-    <script type="text/javascript" src="{{url_for('static', filename='lib/main.js')}}"></script>
+
+  <script>
+      Number.prototype.format = function(){
+          if(this==0) return 0;
+
+          var reg = /(^[+-]?\d+)(\d{3})/;
+          var n = (this + '');
+
+          while (reg.test(n)) n = n.replace(reg, '$1' + ',' + '$2');
+
+          return n;
+      };
+
+
+      String.prototype.format = function(){
+          var num = parseFloat(this);
+          if( isNaN(num) ) return "0";
+
+          return num.format();
+      };
+
+
+
+
+  </script>
+  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='lib/main.css')}}">
+  <script type="text/javascript" src="{{url_for('static', filename='lib/main.js')}}"></script>
+
+
 </head>
+
 <body>
-    {% if isLogin %}
-    <span id="logout">로그아웃</span>
-    {% else %}
-    <span><a href="/login?menu={{menu}}">로그인</a></span>
-    {% endif %}
-    <nav>
-        <ul>
-            {% for m in menuList %}
-                {% if m['menu_name'] == menu %}
-            <li class="activate">
-                {% else %}
-            <li>
-                {% endif %}
-                <a href="{{m['menu_path']}}">{{m['menu_label']}}</a>
-            </li>
-            {% endfor %}
+
+  <!-- Navigation -->
+  <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">Company Name</a>
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
+
+          {% for m in menuList %}
+              {% if m['menu_name'] == menu %}
+          <li class="nav-item activate">
+              {% else %}
+          <li class="nav-item">
+              {% endif %}
+              <a class="nav-link" href="{{m['menu_path']}}">{{m['menu_label']}}</a>
+          </li>
+          {% endfor %}
+
         </ul>
-    </nav>
-    <script>
-        $("#logout").on("click", function(){
-            $.ajax({
-                url: '/ajax/logout',
-                method: 'POST'
-            }).done(function(data){
-                if(data.result == 1){
-                    setTimeout(function(){
-                        location.reload();
-                    },500);
-                }
-                else{
-                    alert("오류가 발생했습니다");
-                }
-            });
-        });
-    </script>
+        {% if isLogin %}
+
+        <li class="nav-item dropdown" style="list-style: none;">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownPortfolio" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            {{u_id}}
+          </a>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownPortfolio">
+            <span class="dropdown-item" id="logout">로그아웃</span>
+<!--            <a class="dropdown-item" data-toggle="modal" data-target="#exampleModal" href="javascript:showInfo();">회원정보보기</a>-->
+            <a class="dropdown-item" href="javascript:showInfo();">회원정보보기</a>
+          </div>
+        </li>
+        {% else %}
+        <span><a href="/login?menu={{menu}}">로그인</a></span>
+        {% endif %}
+
+      </div>
+    </div>
+  </nav>
+
+
+  <script>
+      $("#logout").on("click", function(){
+          $.ajax({
+              url: '/ajax/logout',
+              method: 'POST'
+          }).done(function(data){
+              if(data.result == 1){
+                  setTimeout(function(){
+                      location.reload();
+                  },500);
+              }
+              else{
+                  alert("오류가 발생했습니다");
+              }
+          });
+      });
+  </script>

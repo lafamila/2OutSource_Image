@@ -139,7 +139,7 @@
             });
 
         }
-        $(document).on("click", ".show", function(){
+        $(document).on("click", "#dataTable .show", function(){
             var sn = $(this).data('sn');
             openWindowPop('/popup/showAsk?a_sn='+sn, 'showAsk');
         });
