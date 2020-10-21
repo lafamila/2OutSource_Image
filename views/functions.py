@@ -46,10 +46,17 @@ def get_image(img_h, img_w, text, color, img, fontpath):
     fontcolor = (0, 0, 0, 0)
     if (color[0] + color[1] + color[2]) // 3 < 128:
         fontcolor = (255, 255, 255, 0)
-    print(fontpath)
     font_size = min(img_w // (len(text) - text.count(" ") // 2), img_h)
-    print(os.path.join(os.path.dirname(__file__), fontpath))
-    font = ImageFont.truetype(os.path.join(os.path.dirname(__file__), fontpath), font_size)
+    try:
+        f_p = os.path.join(os.path.dirname(__file__), '../'+fontpath)
+        with open(f_p, "rb") as f:
+            font_bytes = io.BytesIO(f.read())
+        font = ImageFont.truetype(font_bytes, font_size)
+    except:
+        f_p = fontpath
+        with open(f_p, "rb") as f:
+            font_bytes = io.BytesIO(f.read())
+        font = ImageFont.truetype(font_bytes, font_size)
     img_pil = Image.fromarray(img)
     draw = ImageDraw.Draw(img_pil)
 
