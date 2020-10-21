@@ -13,9 +13,9 @@ import glob
 import os
 import ntpath
 import re
-
-
-
+import zipfile
+import io
+from pathlib import Path
 fp = Blueprint('function', __name__, url_prefix='/ajax')
 fp.secret_key = SECRET_KEY
 
@@ -42,15 +42,14 @@ def get_info(data):
             "width": max(xs) - (min(xs) if min(xs) > 0 else 0), "height": max(ys) - (min(ys) if min(ys) > 0 else 0)}
 
 
-def get_image(img_h, img_w, text, color, img):
+def get_image(img_h, img_w, text, color, img, fontpath):
     fontcolor = (0, 0, 0, 0)
     if (color[0] + color[1] + color[2]) // 3 < 128:
         fontcolor = (255, 255, 255, 0)
-
-    fontpath = "./fonts/H2GTRM.TTF"
-
+    print(fontpath)
     font_size = min(img_w // (len(text) - text.count(" ") // 2), img_h)
-    font = ImageFont.truetype(fontpath, font_size)
+    print(os.path.join(os.path.dirname(__file__), fontpath.replace('/', '\\')))
+    font = ImageFont.truetype(os.path.join(os.path.dirname(__file__), fontpath.replace('/', '\\')), font_size)
     img_pil = Image.fromarray(img)
     draw = ImageDraw.Draw(img_pil)
 
@@ -272,6 +271,7 @@ def uploadImage():
         result = db("SELECT * FROM user WHERE U_SN=%s", u_sn)
         if result:
             user = result[0]
+
             now = datetime.datetime.strptime(getToday(), '%Y-%m-%d')
             if user['u_dtm']:
                 limit = datetime.datetime.strptime(user['u_dtm'], '%Y-%m-%d')
@@ -281,32 +281,38 @@ def uploadImage():
                     expired = 2
             else:
                 expired = 1
+
+            print(user, expired)
             if expired == 1:
                 return jsonify({"result" : 0, "msg" : "사용권이 없습니다."})
             elif expired == 2:
                 return jsonify({"result" : 0, "msg" : "사용권의 사용기간이 만료되었습니다."})
 
             else:
-                u_file = request.files.get('file')
-
-                origin = u_file.filename
-                name, ext = origin.split(".")
-                path_template = '/static/files/{}_{}{}.{}'.format(name,
-                                                                  datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"),
-                                                                  '{}', ext)
-                path = path_template.format('')
-                resize_path = path_template.format('_resized')
-                u_file.save('.' + path)
-                image = Image.open('.' + path)
-                width, height = image.size
-                w = 300
-                h = int(300 * height / width)
-                resize_image = image.resize((w, h))
-                resize_image.save('.' + resize_path)
-                u_sn = session["u_sn"]
-                i_sn = db("INSERT INTO uploaded(U_SN, PATH) VALUES (%s, %s)", (u_sn, path))
+                font = request.files.get('font')
+                if font:
+                    f_ext = font.filename.split(".")[-1]
+                    f_path = 'static/files/{}.{}'.format(datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"), f_ext)
+                    font.save('.' + f_path)
+                else:
+                    f_path = '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf'
+                g_sn = db("INSERT INTO grouped(U_SN, F_PATH, REGIST_DTM) VALUES (%s, %s, %s)", (u_sn, f_path, getToday(time=True)))
+                os.makedirs('./static/files/{}'.format(g_sn), exist_ok=True)
+                u_files = request.files.getlist("files[]")
+                data = []
+                for idx, u_file in enumerate(u_files):
+                    origin = u_file.filename
+                    name, ext = origin.split(".")
+                    path = '/static/files/{}/{}_{}{}.{}'.format(g_sn, name, datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"), idx, ext)
+                    u_file.save('.' + path)
+                    image = Image.open('.' + path)
+                    width, height = image.size
+                    w = 300
+                    h = int(300 * height / width)
+                    i_sn = db("INSERT INTO uploaded(G_SN, PATH) VALUES (%s, %s)", (g_sn, path))
+                    data.append({'sn' : i_sn, 'height' : h})
                 # db("UPDATE ordered SET O_CONFIRM_PATH=%s WHERE O_SN=%s", (path, sn))
-                return jsonify({"result": 1, "msg": "업로드되었습니다.", "sn": i_sn, "height": h})
+                return jsonify({"result": 1, "msg": "업로드되었습니다.", "data": data, "sn" : g_sn})
         else:
             return jsonify({"result" : 0, "msg" : "재로그인이 필요합니다."})
 
@@ -314,28 +320,21 @@ def uploadImage():
         return jsonify({"result" : 0, "msg" : "재로그인이 필요합니다."})
 
 
-@fp.route('/getImagePath', methods=['POST'])
-def getImagePath():
-    sn = request.form.get('sn')
-    u_sn = session['u_sn']
-    result = db("SELECT * FROM uploaded WHERE I_SN=%s AND U_SN=%s", (sn, u_sn))
-    if result:
-        return jsonify({"result" : 1, "data" : result[0]})
-    else:
-        return jsonify({"result" : 0, "msg" : "새로고침이 필요합니다."})
+
 
 @fp.route('/imageProcess', methods=['POST'])
 def imageProcess():
     sn = request.form.get('sn')
-    u_sn = session['u_sn']
-    result = db("SELECT * FROM uploaded WHERE I_SN=%s AND U_SN=%s", (sn, u_sn))
+    result = db("SELECT * FROM uploaded WHERE G_SN=%s", (sn))
     if result:
-        img_path = result[0]['path']
-        e_result = reader.readtext('.'+img_path)
-        es_result = convert(e_result)
-        results = find_ch(es_result)
-        print(results)
-        return jsonify({"result" : 1, "data" : results})
+        data = []
+        for r in result:
+            img_path = r['path']
+            e_result = reader.readtext('.'+img_path)
+            es_result = convert(e_result)
+            results = find_ch(es_result)
+            data.append({"path" : img_path, "info" : results, "sn" : r['i_sn']})
+        return jsonify({"result" : 1, "data" : data})
     else:
         return jsonify({"result" : 0, "msg" : "이미지를 다시 업로드해주세요!"})
 
@@ -343,50 +342,60 @@ def imageProcess():
 def generateImage():
     json_data = request.get_json()
     print(json_data)
-    sn = json_data['sn']
-    result = json_data['data']
-    data = db("SELECT * FROM uploaded WHERE I_SN=%s", sn)
-    if data:
-        img_path = data[0]['path']
-    else:
-        return jsonify({"result" : 0, "msg" : "처음부터 다시 시도해주세요."})
-    image = cv2.imread('.'+img_path)
-    mask = get_mask(result, image)
-    dst = cv2.inpaint(image, mask, 3, cv2.INPAINT_TELEA)
-    for text, bound, new_text in result:
-        if new_text.strip() != '':
-            info = get_info(bound)
-            x, y = info["start"]
-            w, h = info["width"], info["height"]
+    g_sn = json_data['g_sn']
+    group = db("SELECT * FROM grouped WHERE G_SN=%s", g_sn)
+    font_path = None
+    if group:
+        font_path = group[0]['f_path']
+    jsd = json_data['data']
+    for js in jsd:
 
-            try:
-                sub = Image.fromarray(dst[y:y + h, x:x + w], 'RGB')
+        sn = js['sn']
 
-                colors = max(sub.getcolors(sub.size[0] * sub.size[1]))
-                subimg = get_image(h, w, new_text, colors[1], dst[y:y + h, x:x + w])
-                dst[y:y + h, x:x + w] = subimg
-            except:
-                continue
-        # 저장
-    p, ext = img_path.split(".")
-    path = "{}_result.{}".format(p, ext)
-    cv2.imwrite('.'+path, dst)
-    u_sn = session['u_sn']
-    i_sn = db("INSERT INTO uploaded(U_SN, PATH) VALUES (%s, %s)", (u_sn, path))
-    return jsonify({"result" : 1, "sn" : i_sn})
+        result = js['info']
+        img_path = js['path']
+        image = cv2.imread('.'+img_path)
+        mask = get_mask(result, image)
+        dst = cv2.inpaint(image, mask, 3, cv2.INPAINT_TELEA)
+        for text, bound, new_text in result:
+            if new_text.strip() != '':
+                info = get_info(bound)
+                x, y = info["start"]
+                w, h = info["width"], info["height"]
+
+                try:
+                    sub = Image.fromarray(dst[y:y + h, x:x + w], 'RGB')
+
+                    colors = max(sub.getcolors(sub.size[0] * sub.size[1]))
+                    subimg = get_image(h, w, new_text, colors[1], dst[y:y + h, x:x + w], font_path)
+                    dst[y:y + h, x:x + w] = subimg
+                except Exception as e:
+                    print(str(e))
+                    continue
+            # 저장
+        p, ext = img_path.split(".")
+        path = "{}_result.{}".format(p, ext)
+        cv2.imwrite('.'+path, dst)
+        db("UPDATE uploaded SET R_PATH=%s WHERE I_SN=%s", (path, sn))
+    return jsonify({"result" : 1, "g_sn" : g_sn})
 
 @fp.route('/getResultImage')
 def getResultImage():
     sn = request.args.get('sn')
-    u_sn = session['u_sn']
-    result = db("SELECT * FROM uploaded WHERE I_SN=%s AND U_SN=%s", (sn, u_sn))
+    result = db("SELECT * FROM uploaded WHERE G_SN=%s", (sn))
+
     if result:
-        file_name = result[0]['path']
-    ext = file_name.split(".")[-1]
-    return send_file("."+file_name,
-                     mimetype='text/{}'.format(ext),
-                     attachment_filename='result.{}'.format(ext),# 다운받아지는 파일 이름.
-                     as_attachment=True)
+        path = ["."+r['r_path'] for r in result]
+        zipf = zipfile.ZipFile('./static/files/{}/result.zip'.format(sn), 'w', zipfile.ZIP_DEFLATED)
+        for f_name in path:
+            zipf.write(f_name)
+        zipf.close()
+        return send_file(
+            './static/files/{}/result.zip'.format(sn),
+            mimetype='application/zip',
+            as_attachment=True,
+            attachment_filename='result.zip'
+        )
 
 @fp.route('/getTp', methods=['POST'])
 def getTp():

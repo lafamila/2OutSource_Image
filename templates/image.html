@@ -15,7 +15,7 @@
     </ol>
   </div>
 
-
+  <div class="container" id="dragForm">
     <form name="uploadForm" id="uploadForm" enctype="multipart/form-data" method="post">
         <table class="table" width="100%" border="1px">
             <tbody id="fileTableTbody">
@@ -27,7 +27,10 @@
             </tbody>
         </table>
     </form>
-
+    <form id="ajaxFrom" method="post">
+       <input type="file" id="ajaxFile" onChange="ajaxFileChange();" style="display:none;"/>
+    </form>
+    <button class="btn" onClick="ajaxFileUpload();" id="fontUpload">폰트 지정</button>
     <a href="#" onclick="uploadFile(); return false;" class="btn bg_01">파일 업로드</a>
 
     <div class="d-flex justify-content-center" style="display:none!important;" id="loading">
@@ -35,11 +38,18 @@
         <span class="sr-only">Loading...</span>
       </div>
     </div>
+  </div>
+  <div class="container">
+      <div id="imageList">
 
-    <div class="container">
+      </div>
+
+  </div>
+  <div class="container">
     <input type="hidden" id="sendString"/>
     <input type="hidden" id="path"/>
     <input type="hidden" id="sn"/>
+    <input type="hidden" id="g_sn"/>
         <div class="row">
           <div class="col-lg-6">
             <div>
@@ -60,10 +70,6 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td>폰트 지정<form id="ajaxFrom" method="post"><input type="file" id="fontFile" style="width:100%"/></form></td>
-                        <td style="text-align:right;"><input type="button" value="적용" id="submit"></td>
-                    </tr>
-                    <tr>
                         <td colspan="2" style="text-align:right;">
                             <a href="/ajax/getResultImage" id="download" style="display:none;">Download!</a>
                         </td>
@@ -75,13 +81,22 @@
         </div>
 
 
-    </div>
+  </div>
 
+    <script>
+        function ajaxFileUpload() {
+            $("#ajaxFile").click();
+        }
 
+        function ajaxFileChange() {
+            alert("폰트 지정되었습니다.");
+        }
+
+    </script>
 
 
     <script>
-        var pResult = [];
+        var imageData = [];
         var nowData;
         var pie;
         getCroppie = function(bound){
@@ -113,7 +128,8 @@
 
                         var data = nowData;
                         data['bound'] = bound;
-                        pResult[data['index']][1] = data['bound'];
+                        var idx = parseInt($("#sn").val());
+                        imageData[idx]['info'][data['index']][1] = data['bound'];
 
 
                     }
@@ -132,8 +148,9 @@
     </script>
     <script>
         $(document).on('focus', '.result-input', function(){
+            var i = parseInt($("#sn").val());
             var idx = $(this).data('idx');
-            nowData = {'index':idx, 'bound':pResult[idx][1]};
+            nowData = {'index':idx, 'bound':imageData[i]['info'][idx][1]};
             var data = nowData;
             var min_x = data['bound'][0][0];
             var min_y = data['bound'][0][1];
@@ -156,24 +173,28 @@
             getCroppie([min_x, min_y, max_x, max_y]);
         });
 
-
-        $("#submit").on("click", function(){
-            var sn = $("#sn").val();
+        saveData = function(){
+            var i = parseInt($("#sn").val());
             var inputs = $("#results").find(".result-input");
             $.each(inputs, function(pIndex, pValue){
                 var idx = $(pValue).data('idx');
-                pResult[idx][2] = $(pValue).val();
+                imageData[i]['info'][idx][2] = $(pValue).val();
             });
+        }
+
+        $(document).on("click", "#submit", function(){
+            saveData();
+            var g_sn = $("#g_sn").val();
             $.ajax({
                 url : '/ajax/generateImage',
                 method : 'POST',
                 contentType : 'application/json',
                 dataType : 'json',
-                data : JSON.stringify({'sn' : sn, 'data' : pResult})
+                data : JSON.stringify({"g_sn" : g_sn, "data" : imageData})
             }).done(function(data){
                 if(data.result == 1){
                     var href = $("#download").attr("href");
-                    $("#download").attr("href", href+"?sn="+data.sn);
+                    $("#download").attr("href", href+"?sn="+data.g_sn);
                     $("#download").show();
                 }
                 else{
@@ -325,6 +346,10 @@
                 alert("파일이 없습니다.");
                 return;
             }
+            else if(uploadFileList.length > 5){
+                alert("한번에 최대 5개의 이미지를 적용할 수 있습니다.");
+                return;
+            }
 
             // 용량을 500MB를 넘을 경우 업로드 불가
             if(totalFileSize > maxUploadSize){
@@ -338,9 +363,12 @@
                 var form = $('#uploadForm')[0];
                 var formData = new FormData(form);
                 for(var i = 0; i < uploadFileList.length; i++){
-                    formData.append('files', fileList[uploadFileList[i]]);
+                    formData.append('files[]', fileList[uploadFileList[i]]);
                 }
-                formData.append("file", fileList[0]);
+                formData.append("font", $("#ajaxFile")[0].files[0]);
+
+
+                //formData.append("file", fileList[0]);
                 $.ajax({
                     url : "/ajax/uploadImage",
                     type : "POST",
@@ -351,44 +379,36 @@
                     if(result.result == 1){
                         alert(result.msg);
                         $("#ajaxFile").val("");
-                        $("#sn").val(result.sn);
+                        $("#fontUpload").hide();
+                        var imgs = result.data;
                         $("#loading").show();
+                        alert(imgs.length + "장의 이미지를 분석중입니다. 잠시 기다려주세요.");
+                        $("#g_sn").val(result.sn);
                         $.ajax({
                             url : '/ajax/imageProcess',
                             method : 'POST',
                             data : {'sn' : result.sn}
                         }).done(function(data){
                             $("#loading").attr("style", "display: none !important");
+                            alert("분석이 완료되었습니다. 이미지별 번호를 눌러 수정해주세요.");
+                            $("#dragForm").hide();
                             if(data.result == 1){
-                                pResult = data.data;
+                                imageData = data.data;
                                 var html = '';
-                                $.each(pResult, function(pIndex, pValue){
-                                    html += '<tr>';
-                                    html += '    <td>'+pValue[0]+'</td>';
-                                    html += '    <td><input type="text" style="width:100%;" class="result-input" data-idx="'+pIndex+'" value="'+pValue[2]+'"/></td>';
-                                    html += '</tr>';
+                                $.each(data.data, function(pIdx, pInfo){
+                                    html += '<span class="image-link" data-sn="'+pIdx+'">'+(pIdx+1)+'</span>';
                                 });
-                                $("#results").find("tbody").html(html);
-                                $("#results").show();
-                                var sn = $("#sn").val();
-                                $.ajax({
-                                    url : '/ajax/getImagePath',
-                                    method : 'POST',
-                                    data : {'sn' : sn}
-                                }).done(function(pData){
-                                    if(pData.result == 1){
-                                        $("#path").val(pData.data.path);
-                                    }
-                                    else{
-                                        alert(pData.msg);
-                                    }
-                                });
-
+                                html += '<input type="button" value="적용" id="submit">';
+                                $("#imageList").html(html);
                             }
                             else{
                                 alert(data.msg);
                             }
                         });
+
+                        /*
+                        $("#sn").val(result.sn);
+                        */
                     }
                     else{
                         alert(result.msg);
@@ -396,6 +416,26 @@
                 });
             }
         }
+        $(document).on('click', '.image-link', function(){
+            if($("#sn").val()){
+                alert("저장하고 다음 이미지로 변경합니다.");
+                saveData();
+            }
+            var idx = parseInt($(this).data('sn'));
+            $("#sn").val(idx);
+            var pResult = imageData[idx]['info'];
+            var html = '';
+            $.each(pResult, function(pIndex, pValue){
+                html += '<tr>';
+                html += '    <td>'+pValue[0]+'</td>';
+                html += '    <td><input type="text" style="width:100%;" class="result-input" data-idx="'+pIndex+'" value="'+pValue[2]+'"/></td>';
+                html += '</tr>';
+            });
+            $("#results").find("tbody").html(html);
+            $("#results").show();
+            $("#path").val(imageData[idx]['path']);
+
+        });
     </script>
 
 
