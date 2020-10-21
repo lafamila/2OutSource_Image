@@ -293,7 +293,7 @@ def uploadImage():
                 if font:
                     f_ext = font.filename.split(".")[-1]
                     f_path = 'static/files/{}.{}'.format(datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"), f_ext)
-                    font.save('.' + f_path)
+                    font.save('./' + f_path)
                 else:
                     f_path = '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf'
                 g_sn = db("INSERT INTO grouped(U_SN, F_PATH, REGIST_DTM) VALUES (%s, %s, %s)", (u_sn, f_path, getToday(time=True)))
@@ -303,7 +303,7 @@ def uploadImage():
                 for idx, u_file in enumerate(u_files):
                     origin = u_file.filename
                     name, ext = origin.split(".")
-                    path = '/static/files/{}/{}_{}{}.{}'.format(g_sn, name, datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"), idx, ext)
+                    path = '/static/files/{}/{}_{}.{}'.format(g_sn, name, datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"), idx, ext)
                     u_file.save('.' + path)
                     image = Image.open('.' + path)
                     width, height = image.size
