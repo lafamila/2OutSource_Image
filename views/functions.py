@@ -48,8 +48,8 @@ def get_image(img_h, img_w, text, color, img, fontpath):
         fontcolor = (255, 255, 255, 0)
     print(fontpath)
     font_size = min(img_w // (len(text) - text.count(" ") // 2), img_h)
-    print(os.path.join(os.path.dirname(__file__), fontpath.replace('/', '\\')))
-    font = ImageFont.truetype(os.path.join(os.path.dirname(__file__), fontpath.replace('/', '\\')), font_size)
+    print(os.path.join(os.path.dirname(__file__), fontpath))
+    font = ImageFont.truetype(os.path.join(os.path.dirname(__file__), fontpath), font_size)
     img_pil = Image.fromarray(img)
     draw = ImageDraw.Draw(img_pil)
 
@@ -303,7 +303,7 @@ def uploadImage():
                 for idx, u_file in enumerate(u_files):
                     origin = u_file.filename
                     name, ext = origin.split(".")
-                    path = '/static/files/{}/{}_{}.{}'.format(g_sn, name, datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"), idx, ext)
+                    path = '/static/files/{}/{}_{}_{}.{}'.format(g_sn, g_sn, datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"), idx, ext)
                     u_file.save('.' + path)
                     image = Image.open('.' + path)
                     width, height = image.size
@@ -375,7 +375,7 @@ def generateImage():
             # 저장
         p, ext = img_path.split(".")
         path = "{}_result.{}".format(p, ext)
-        cv2.imwrite('.'+path, dst)
+        cv2.imwrite('./'+path, dst)
         db("UPDATE uploaded SET R_PATH=%s WHERE I_SN=%s", (path, sn))
     return jsonify({"result" : 1, "g_sn" : g_sn})
 
