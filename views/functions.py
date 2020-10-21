@@ -302,7 +302,7 @@ def uploadImage():
                     f_path = 'static/files/{}.{}'.format(datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"), f_ext)
                     font.save('./' + f_path)
                 else:
-                    f_path = '/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf'
+                    f_path = 'static/files/malgun.ttf'
                 g_sn = db("INSERT INTO grouped(U_SN, F_PATH, REGIST_DTM) VALUES (%s, %s, %s)", (u_sn, f_path, getToday(time=True)))
                 os.makedirs('./static/files/{}'.format(g_sn), exist_ok=True)
                 u_files = request.files.getlist("files[]")
