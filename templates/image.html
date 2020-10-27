@@ -30,9 +30,10 @@
     <form id="ajaxFrom" method="post">
        <input type="file" id="ajaxFile" onChange="ajaxFileChange();" style="display:none;"/>
     </form>
-    <button class="btn" onClick="ajaxFileUpload();" id="fontUpload">폰트 지정</button>
-    <a href="#" onclick="uploadFile(); return false;" class="btn bg_01">파일 업로드</a>
-
+      <div id="uploadDiv" style="display:none;">
+        <button class="btn" onClick="ajaxFileUpload();" id="fontUpload">폰트 지정</button>
+        <a href="#" onclick="uploadFile(); return false;" class="btn bg_01" id="uploadFileA">파일 업로드</a>
+      </div>
     <div class="d-flex justify-content-center" style="display:none!important;" id="loading">
       <div class="spinner-border" role="status">
         <span class="sr-only">Loading...</span>
@@ -40,10 +41,7 @@
     </div>
   </div>
   <div class="container">
-      <div id="imageList">
-
-      </div>
-
+          <ul class="pagination" id="pagination"></ul>
   </div>
   <div class="container">
     <input type="hidden" id="sendString"/>
@@ -71,9 +69,24 @@
                 <tfoot>
                     <tr>
                         <td colspan="2" style="text-align:right;">
-                            <a href="/ajax/getResultImage" id="download" style="display:none;">Download!</a>
+                            <input type="button" value="저장" id="save" disabled>
+                            <input type="button" value="완료" id="submit" disabled>
                         </td>
                     </tr>
+                    <tr>
+                        <td colspan="2" style="text-align:right;">
+                            <button id="download" style="display:none;">Download!</button>
+                            <form action="/ajax/getResultImage" method="get" id="downloadForm">
+                                <input type="hidden" name="sn" id="href"/>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align:right;">
+                            <input type="button" value="다시하기" id="refresh">
+                        </td>
+                    </tr>
+
                 </tfoot>
 
             </table>
@@ -133,6 +146,7 @@
 
 
                     }
+                    $("#save").attr("disabled", false);
                 });
         }
         changeCroppie = function(bound){
@@ -180,10 +194,23 @@
                 var idx = $(pValue).data('idx');
                 imageData[i]['info'][idx][2] = $(pValue).val();
             });
+            $("#save").attr("disabled", true);
         }
-
+        $(document).on("click", "#refresh", function(){
+            if(confirm("처음부터 다시 시작하시겠습니까?")){
+                window.location.reload();
+            }
+        });
         $(document).on("click", "#submit", function(){
-            saveData();
+            if(!$("#save").is(":disabled")){
+                if(confirm("저장되지 않은 정보가 있습니다.\n저장하시겠습니까?")){
+                    saveData();
+                }
+            }
+            var href = "/ajax/getResultImage";
+            $("#download").data("href", "");
+            $("#download").hide();
+
             var g_sn = $("#g_sn").val();
             $.ajax({
                 url : '/ajax/generateImage',
@@ -193,8 +220,8 @@
                 data : JSON.stringify({"g_sn" : g_sn, "data" : imageData})
             }).done(function(data){
                 if(data.result == 1){
-                    var href = $("#download").attr("href");
-                    $("#download").attr("href", href+"?sn="+data.g_sn);
+                    alert("다운로드 해주세요!");
+                    $("#download").data("href", data.g_sn);
                     $("#download").show();
                 }
                 else{
@@ -202,7 +229,11 @@
                 }
             });
         });
-
+        $(document).on("click", "#download", function(){
+            var form = $('#downloadForm')[0];
+            $("#href").val($(this).data("href"));
+            form.submit();
+        });
     </script>
 
     <script type="text/javascript">
@@ -395,11 +426,16 @@
                             if(data.result == 1){
                                 imageData = data.data;
                                 var html = '';
-                                $.each(data.data, function(pIdx, pInfo){
-                                    html += '<span class="image-link" data-sn="'+pIdx+'">'+(pIdx+1)+'</span>';
+
+                                html += '<li class="page-item"><a class="page-link" aria-label="Previous" id="dataTable_previous" aria-controls="dataTable" href="javascript:reload(0);"><span aria-hidden="true">«</span></a></li>';
+                                $.each(imageData, function(pIdx, pInfo){
+                                    var _last = (pIdx == (imageData.length - 1)) ? 1 : 0;
+                                    html += '<li class="page-item"><a class="page-link" aria-controls="dataTable"  href="javascript:reload('+pIdx+');" data-sn="'+pIdx+'" data-out="'+_last+'">'+(pIdx+1)+'</a></li>';
                                 });
-                                html += '<input type="button" value="적용" id="submit">';
-                                $("#imageList").html(html);
+                                html += '<li class="page-item"><a class="page-link" aria-label="Next" id="dataTable_next" aria-controls="dataTable"  href="javascript:reload('+(imageData.length-1)+');"><span aria-hidden="true">»</span></a></li>';
+
+
+                                $("#pagination").html(html);
                             }
                             else{
                                 alert(data.msg);
@@ -416,12 +452,20 @@
                 });
             }
         }
-        $(document).on('click', '.image-link', function(){
+        $(document).on('click', "#save", function(){
             if($("#sn").val()){
-                alert("저장하고 다음 이미지로 변경합니다.");
+                alert("저장되었습니다.");
                 saveData();
+
             }
-            var idx = parseInt($(this).data('sn'));
+        });
+        reload = function(sn){
+            if(!$("#save").is(":disabled")){
+                if(confirm("저장되지 않은 정보가 있습니다.\n저장하시겠습니까?")){
+                    saveData();
+                }
+            }
+            var idx = parseInt(sn);
             $("#sn").val(idx);
             var pResult = imageData[idx]['info'];
             var html = '';
@@ -434,10 +478,42 @@
             $("#results").find("tbody").html(html);
             $("#results").show();
             $("#path").val(imageData[idx]['path']);
-
-        });
+            $(document).find(".page-item").removeClass("active");
+            $(document).find(".page-link").eq(idx+1).parent().addClass("active");
+            console.log($(document).find(".page-link").eq(idx+1).data("out"));
+            if(parseInt($(document).find(".page-link").eq(idx+1).data("out")) == 1){
+                $("#submit").attr("disabled", false);
+            }
+            else{
+                $("#submit").attr("disabled", true);
+            }
+            $(document).find('.result-input').eq(0).focus();
+        }
     </script>
+    <script>
+        $(document).ready(function(){
+            $.ajax({
+                url : '/ajax/isExpired',
+                method : 'POST'
+            }).done(function(result){
+                if(result.data == 0){
+                    $("#dropZone").html("사용권이 없습니다.");
+                }
+                else if(result.data == -1){
+                    $("#dropZone").html("사용권이 만료되었습니다.");
+                }
+                else if(result.data == -2){
+                    $("#dropZone").html("다시 로그인해주세요.");
+                }
+                else{
+                    $("#uploadDiv").show();
+                }
+            });
+        })
 
+
+
+    </script>
 
 
 {% include "common/footer.html" %}

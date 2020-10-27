@@ -259,12 +259,14 @@ def join():
     u_pw = request.form.get('u_pw')
     u_nm = request.form.get('u_nm')
     u_cp = request.form.get('u_cp')
+    u_phone = request.form.get('u_phone')
+    u_mail = request.form.get('u_mail')
     result = db("SELECT * FROM user WHERE U_ID=%s", (u_id))
     if result:
         return jsonify({'result': 0, 'msg': '존재하는 아이디입니다.'})
     try:
         now = getToday(time=True)
-        u_sn = db("INSERT INTO user(U_ID, U_PW, U_NM, U_CP, U_DTM, REGIST_DTM) VALUES (%s, %s, %s, %s, NULL, %s)", (u_id, u_pw, u_nm, u_cp, now))
+        u_sn = db("INSERT INTO user(U_ID, U_PW, U_NM, U_CP, U_PHONE, U_MAIL, U_DTM, REGIST_DTM) VALUES (%s, %s, %s, %s, %s, %s, NULL, %s)", (u_id, u_pw, u_nm, u_cp, u_phone, u_mail, now))
         session['u_sn'] = u_sn
         return jsonify({'result': 1})
     except Exception as e:
@@ -393,15 +395,17 @@ def getResultImage():
 
     if result:
         path = ["."+r['r_path'] for r in result]
-        zipf = zipfile.ZipFile('./static/files/{}/result.zip'.format(sn), 'w', zipfile.ZIP_DEFLATED)
+        idx = len(glob.glob("./static/files/{}/result_*.zip".format(sn)))+1
+        print(idx)
+        zipf = zipfile.ZipFile('./static/files/{}/result_{}.zip'.format(sn, idx), 'w', zipfile.ZIP_DEFLATED)
         for f_name in path:
-            zipf.write(f_name)
+            zipf.write(f_name, os.path.join(datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"), os.path.basename(f_name)))
         zipf.close()
         return send_file(
-            './static/files/{}/result.zip'.format(sn),
+            './static/files/{}/result_{}.zip'.format(sn, idx),
             mimetype='application/zip',
             as_attachment=True,
-            attachment_filename='result.zip'
+            attachment_filename='result.zip', cache_timeout=0
         )
 
 @fp.route('/getTp', methods=['POST'])
@@ -491,3 +495,31 @@ def getMain():
         return jsonify({"data" : detail})
     else:
         return jsonify({"data" : []})
+
+@fp.route('/isExpired', methods=['POST'])
+def isExpired():
+    if 'u_sn' in session:
+        u_sn = session['u_sn']
+        result = db("SELECT * FROM user WHERE U_SN=%s", u_sn)
+        if result:
+            user = result[0]
+
+            now = datetime.datetime.strptime(getToday(), '%Y-%m-%d')
+            if user['u_dtm']:
+                limit = datetime.datetime.strptime(user['u_dtm'], '%Y-%m-%d')
+                if (limit-now).total_seconds() >= 0:
+                    expired = 0
+                else:
+                    expired = 2
+            else:
+                expired = 1
+
+            print(user, expired)
+            if expired == 1:
+                return jsonify({"data" : 0})
+            elif expired == 2:
+                return jsonify({"data" : -1})
+
+            else:
+                return jsonify({"data" : 1})
+    return jsonify({"data" : -2})

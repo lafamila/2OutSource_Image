@@ -43,6 +43,8 @@
                     <div class="form-group" id="u_name_Toggle" style="display:none;"><input class="form-control" type="text" name="u_nm" id="u_nm" placeholder="Name" /></div>
 
                     <div class="form-group" id="u_cp_Toggle" style="display:none;"><input class="form-control" type="text" name="u_cp" id="u_cp" placeholder="Company"/></div>
+                    <div class="form-group" id="u_phone_Toggle" style="display:none;"><input class="form-control" type="tel" name="u_phone" id="u_phone" placeholder="Tel"/></div>
+                    <div class="form-group" id="u_mail_Toggle" style="display:none;"><input class="form-control" type="email" name="u_mail" id="u_mail" placeholder="Email"/></div>
                     <div class="form-group" id="login_section"><button class="btn btn-primary btn-block" type="submit" id="login">로그인</button></div>
                     <div class="form-group" id="join_section" style="display:none;"><button class="btn btn-primary btn-block" type="submit" id="join">가입하기</button></div>
                 </form>
@@ -63,6 +65,8 @@
             $("#u_name_Toggle").show();
             $("#u_pw_Toggle").show();
             $("#u_cp_Toggle").show();
+            $("#u_phone_Toggle").show();
+            $("#u_mail_Toggle").show();
             $("#login_section").hide();
             $("#show").hide();
             $("#hide").show();
@@ -73,6 +77,8 @@
             $("#u_name_Toggle").hide();
             $("#u_pw_Toggle").hide();
             $("#u_cp_Toggle").hide();
+            $("#u_phone_Toggle").hide();
+            $("#u_mail_Toggle").hide();
             $("#login_section").show();
             $("#show").show();
             $("#hide").hide();
@@ -102,7 +108,9 @@
             var u_pw_check = $("#u_pw_check").val();
             var u_nm = $("#u_nm").val();
             var u_cp = $("#u_cp").val();
-            var params = {'u_id' : u_id, 'u_pw' : u_pw, 'u_nm' : u_nm, 'u_cp' : u_cp};
+            var u_phone = $("#u_phone").val();
+            var u_mail = $("#u_mail").val();
+            var params = {'u_id' : u_id, 'u_pw' : u_pw, 'u_nm' : u_nm, 'u_cp' : u_cp, 'u_phone' : u_phone, 'u_mail' : u_mail};
             if(u_pw == u_pw_check){
 
                 $.ajax({
