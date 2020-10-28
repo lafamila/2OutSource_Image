@@ -181,7 +181,7 @@ def processRequest():
         if r_type == 0:
             db("UPDATE user SET U_TP=0, U_DTM=%s WHERE U_SN=%s", (end, u_sn))
         else:
-            db("UPDATE user SET U_DTM=%s WHERE U_SN=%s", (u_sn))
+            db("UPDATE user SET U_DTM=%s WHERE U_SN=%s", (end, u_sn))
         db("UPDATE request SET R_STTUS=1 WHERE R_SN=%s", r_sn)
         return jsonify({"result" : 1})
     else:
