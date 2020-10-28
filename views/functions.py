@@ -72,15 +72,15 @@ def get_image(img_h, img_w, text, color, img, fontpath):
 def get_translate(text):
     data = {'source': 'zh-CN', 'target': 'en', 'text': text}
 
-    headers = {"X-Naver-Client-Id": "cs36gu9j0n", "X-Naver-Client-Secret": "8Ym3riLwyhOVqkJCChD5az3RUUeGAASJ1zMLanTH"}
-    res = requests.post("https://openapi.naver.com/v1/papago/n2mt", headers=headers, data=data)
+    headers = {"X-NCP-APIGW-API-KEY-ID": "cs36gu9j0n", "X-NCP-APIGW-API-KEY": "8Ym3riLwyhOVqkJCChD5az3RUUeGAASJ1zMLanTH"}
+    res = requests.post("https://naveropenapi.apigw.ntruss.com/nmt/v1/translation", headers=headers, data=data)
     resj = json.loads(res.text)
     temp = resj["message"]["result"]["translatedText"]
 
     data["text"] = temp
     data["source"] = 'en'
     data["target"] = 'ko'
-    res = requests.post("https://openapi.naver.com/v1/papago/n2mt", headers=headers, data=data)
+    res = requests.post("https://naveropenapi.apigw.ntruss.com/nmt/v1/translation", headers=headers, data=data)
     resj = json.loads(res.text)
     last = resj["message"]["result"]["translatedText"]
     return last
