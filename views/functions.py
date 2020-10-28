@@ -72,7 +72,7 @@ def get_image(img_h, img_w, text, color, img, fontpath):
 def get_translate(text):
     data = {'source': 'zh-CN', 'target': 'en', 'text': text}
 
-    headers = {"X-Naver-Client-Id": "FrFyv031pxHA6LvisJJC", "X-Naver-Client-Secret": "dkY2WOLZL3"}
+    headers = {"X-Naver-Client-Id": "cs36gu9j0n", "X-Naver-Client-Secret": "8Ym3riLwyhOVqkJCChD5az3RUUeGAASJ1zMLanTH"}
     res = requests.post("https://openapi.naver.com/v1/papago/n2mt", headers=headers, data=data)
     resj = json.loads(res.text)
     temp = resj["message"]["result"]["translatedText"]
