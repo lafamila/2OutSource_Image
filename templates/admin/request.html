@@ -73,9 +73,11 @@
             var condition = $("#condition").val();
             var query = $("#query").val();
             if(query == "" || query == null){
-                $("#query").focus();
-                alert("검색 내용을 입력해주세요");
-                return false;
+                if(condition != 0){
+                    $("#query").focus();
+                    alert("검색 내용을 입력해주세요");
+                    return false;
+                }
             }
             if(condition == -1 || condition == "" || condition == null){
                 $("#condition").focus();

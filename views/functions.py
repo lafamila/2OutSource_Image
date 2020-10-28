@@ -150,14 +150,14 @@ def searchUser():
         col = "u.U_CP"
     elif cond == 4:
         result = db(
-            "SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, -1) AS R_TYPE, r.regist_dtm as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_STTUS=0 WHERE 1")
+            "SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, -1) AS R_TYPE, r.REGIST_DTM as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_STTUS=0 WHERE 1")
         if len(result) > 0:
             return jsonify({"result": 1, "data": result})
         else:
             return jsonify({"result": 0})
     else:
         result = db(
-            "SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, -1) AS R_TYPE, r.regist_dtm as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_STTUS=0 WHERE u.U_ID LIKE %s OR u.U_NM LIKE %s OR u.U_CP LIKE %s", ('%{}%'.format(q), '%{}%'.format(q), '%{}%'.format(q)))
+            "SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, -1) AS R_TYPE, r.regist_dtm as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_STTUS=0 WHERE u.U_ID LIKE %s OR u.U_NM LIKE %s OR u.U_CP LIKE %s ORDER BY u.REGIST_DTM DESC", ('%{}%'.format(q), '%{}%'.format(q), '%{}%'.format(q)))
         if len(result) > 0:
             return jsonify({"result": 1, "data": result})
         else:
@@ -523,3 +523,21 @@ def isExpired():
             else:
                 return jsonify({"data" : 1})
     return jsonify({"data" : -2})
+
+
+@fp.route('/getAlerts')
+def getAlerts():
+
+    where = ""
+    where += "AND r.R_TYPE = 1"
+    query = "SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, -1) AS R_TYPE, r.regist_dtm as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_STTUS=0 WHERE 1=1 {} ORDER BY r.REGIST_DTM DESC".format(where)
+    money = db(query+" LIMIT 3 OFFSET 0")
+    moneyCount = len(db(query))
+
+    where = ""
+    where += "AND r.R_TYPE = 0"
+    query = "SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, -1) AS R_TYPE, r.regist_dtm as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_STTUS=0 WHERE 1=1 {} ORDER BY r.REGIST_DTM DESC".format(where)
+    free = db(query+" LIMIT 3 OFFSET 0")
+    freeCount = len(db(query))
+
+    return jsonify({"money" : money, "moneyCount": moneyCount, "free" : free, "freeCount" : freeCount})

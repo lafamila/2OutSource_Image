@@ -130,16 +130,27 @@
                 <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link" data-toggle="dropdown" aria-expanded="false" href="#"><i class="fas fa-dollar-sign fa-2x text-gray-300" style="font-size: 16px;"></i><span class="badge badge-danger badge-counter" id="money-count"></span></a>
                     <div
                         class="dropdown-menu dropdown-menu-right dropdown-list dropdown-menu-right animated--grow-in" role="menu">
-                        <h6 class="dropdown-header">예치금내역</h6>
+                        <h6 class="dropdown-header">유료신청 내역</h6>
                         <div id="money-list">
 
                         </div>
-                        <a class="text-center dropdown-item small text-gray-500" href="/admin/deposit">모든 신청 내역보기</a>
+                        <a class="text-center dropdown-item small text-gray-500" href="/admin/request">모든 신청 내역보기</a>
                     </div>
                 </div>
                 <div class="shadow dropdown-list dropdown-menu dropdown-menu-right" aria-labelledby="alertsDropdown"></div>
             </li>
-        <li class="nav-item" role="presentation"><a class="nav-link" href="/">쇼핑몰</a></li>
+            <li class="nav-item dropdown no-arrow mx-1" role="presentation">
+                <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link" data-toggle="dropdown" aria-expanded="false" href="#"><i class="fas fa-clipboard-list fa-2x text-gray-300" style="font-size: 16px;"></i><span class="badge badge-danger badge-counter" id="free-count"></span></a>
+                    <div
+                        class="dropdown-menu dropdown-menu-right dropdown-list dropdown-menu-right animated--grow-in" role="menu">
+                        <h6 class="dropdown-header">무료신청 내역</h6>
+                        <div id="free-list"></div>
+                        <a class="text-center dropdown-item small text-gray-500" href="/admin/request">모든 신청 내역보기</a>
+                    </div>
+                </div>
+                <div class="shadow dropdown-list dropdown-menu dropdown-menu-right" aria-labelledby="alertsDropdown"></div>
+            </li>
+        <li class="nav-item" role="presentation"><a class="nav-link" href="/">서비스 홈</a></li>
         <div class="d-none d-sm-block topbar-divider"></div>
         <li class="nav-item dropdown no-arrow" role="presentation">
             <div class="nav-item dropdown no-arrow"><a class="dropdown-toggle nav-link" data-toggle="dropdown" aria-expanded="false" href="#"><span class="d-none d-lg-inline mr-2 text-gray-600 small">관리자</span></a>
@@ -175,4 +186,53 @@
                 }
             });
         });
+    </script>
+    <script>
+    alertInit = function(){
+        $.ajax({
+            url : '/ajax/getAlerts',
+            method : 'get'
+        }).done(function(result){
+
+            var html = '';
+            $.each(result.money, function(pIndex, pValue){
+
+                html += '<a class="d-flex align-items-center dropdown-item" href="/admin/request">';
+                html += '    <div class="dropdown-list-image mr-3">';
+                html += '        <span class="small text-gray-500">'+pValue.u_id+'</div>';
+                html += '    </div>';
+                html += '    <div class="font-weight-bold">';
+                html += '        <div class="text-truncate"><span>'+pValue.dtm.substring(0, 10)+' 신청</span></div>';
+                html += '        <p class="small text-gray-500 mb-0">'+pValue.u_nm+'</p>';
+                html += '    </div>';
+                html += '</a>';
+            });
+            $("#money-list").html(html);
+            $("#money-count").html(result.moneyCount);
+            if(result.moneyCount == 0){
+                $("#money-count").hide();
+            }
+
+            var html = '';
+            $.each(result.free, function(pIndex, pValue){
+                html += '<a class="d-flex align-items-center dropdown-item" href="/admin/request">';
+                html += '    <div class="dropdown-list-image mr-3">';
+                html += '        <span class="small text-gray-500">'+pValue.u_id+'</div>';
+                html += '    </div>';
+                html += '    <div class="font-weight-bold">';
+                html += '        <div class="text-truncate"><span>'+pValue.dtm.substring(0, 10)+' 신청</span></div>';
+                html += '        <p class="small text-gray-500 mb-0">'+pValue.u_nm+'</p>';
+                html += '    </div>';
+                html += '</a>';
+
+            });
+            $("#free-list").html(html);
+            $("#free-count").html(result.freeCount);
+            if(result.freeCount == 0){
+                $("#free-count").hide();
+            }
+        });
+    }
+    alertInit();
+    setInterval(alertInit, 20000);
     </script>

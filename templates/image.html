@@ -3,7 +3,16 @@
 {% include "common/header.html" %}
 {% endwith %}
 {% endwith %}
+  <style>
 
+        #full{
+          position: absolute;
+          top: 35px;
+          right: 35px;
+          z-index: 5;
+        }
+
+  </style>
   <div class="container">
     <h1 class="mt-4 mb-3">이미지 번역
       <small>이미지 번역하기</small>
@@ -21,7 +30,7 @@
             <tbody id="fileTableTbody">
                 <tr>
                     <td id="dropZone" style="height:250px;text-align:center;vertical-align:middle;">
-                        파일을 드래그 하세요
+
                     </td>
                 </tr>
             </tbody>
@@ -31,8 +40,8 @@
        <input type="file" id="ajaxFile" onChange="ajaxFileChange();" style="display:none;"/>
     </form>
       <div id="uploadDiv" style="display:none;">
-        <button class="btn" onClick="ajaxFileUpload();" id="fontUpload">폰트 지정</button>
-        <a href="#" onclick="uploadFile(); return false;" class="btn bg_01" id="uploadFileA">파일 업로드</a>
+        <button class="btn btn-secondary" onClick="ajaxFileUpload();" id="fontUpload">폰트 지정</button>
+        <a href="#" onclick="uploadFile(); return false;" class="btn btn-primary" id="uploadFileA">파일 업로드</a>
       </div>
     <div class="d-flex justify-content-center" style="display:none!important;" id="loading">
       <div class="spinner-border" role="status">
@@ -40,21 +49,28 @@
       </div>
     </div>
   </div>
-  <div class="container">
+  <div class="container" >
           <ul class="pagination" id="pagination"></ul>
+
+
   </div>
-  <div class="container">
+  <div class="container-fluid">
     <input type="hidden" id="sendString"/>
     <input type="hidden" id="path"/>
     <input type="hidden" id="sn"/>
     <input type="hidden" id="g_sn"/>
         <div class="row">
-          <div class="col-lg-6">
+          <div class="col-lg-8">
+              <button type="button" class="btn btn-outline-white" id="full" style="display:none;" style="color:white!important;">
+                  <svg width="2em" height="2em" viewBox="0 0 16 16" class="bi bi-arrows-fullscreen" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path style="color:white!important;" fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344 0a.5.5 0 0 1 .707 0l4.096 4.096V11.5a.5.5 0 1 1 1 0v3.975a.5.5 0 0 1-.5.5H11.5a.5.5 0 0 1 0-1h2.768l-4.096-4.096a.5.5 0 0 1 0-.707zm0-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707zm-4.344 0a.5.5 0 0 1-.707 0L1.025 1.732V4.5a.5.5 0 0 1-1 0V.525a.5.5 0 0 1 .5-.5H4.5a.5.5 0 0 1 0 1H1.732l4.096 4.096a.5.5 0 0 1 0 .707z"></path>
+                  </svg>
+              </button>
             <div>
                 <div class="my-croppie"></div>
             </div>
           </div>
-          <div class="col-lg-6">
+          <div class="col-lg-4">
             <table id="results" style="display:none;width:100%">
                 <colgroup>
                     <col width="30">
@@ -69,13 +85,13 @@
                 <tfoot>
                     <tr>
                         <td colspan="2" style="text-align:right;">
-                            <input type="button" value="저장" id="save" disabled>
-                            <input type="button" value="완료" id="submit" disabled>
+                            <input type="button" class="btn btn-secondary" value="저장" id="save" disabled>
+                            <input type="button" class="btn btn-secondary" value="완료" id="submit" disabled>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2" style="text-align:right;">
-                            <button id="download" style="display:none;">Download!</button>
+                            <button id="download" style="display:none;" class="btn btn-secondary">Download!</button>
                             <form action="/ajax/getResultImage" method="get" id="downloadForm">
                                 <input type="hidden" name="sn" id="href"/>
                             </form>
@@ -83,7 +99,7 @@
                     </tr>
                     <tr>
                         <td colspan="2" style="text-align:right;">
-                            <input type="button" value="다시하기" id="refresh">
+                            <input type="button" class="btn btn-secondary" value="다시하기" id="refresh">
                         </td>
                     </tr>
 
@@ -113,6 +129,7 @@
         var nowData;
         var pie;
         getCroppie = function(bound){
+            $("#full").show();
             var w = bound[2] - bound[0];
             var h = bound[3] - bound[1];
             var path = $("#path").val();
@@ -122,7 +139,7 @@
                 pie = $('.my-croppie').croppie({
                     url: path,
                     viewport: { width: w, height: h },
-                    boundary: { width: 400, height: 600},
+                    boundary: { width: '100%', height: 600},
                     showZoomer: false,
                     enableResize: true,
                     enableOrientation: true,
@@ -506,6 +523,7 @@
                     $("#dropZone").html("다시 로그인해주세요.");
                 }
                 else{
+                    $("#dropZone").html("파일을 드래그 하세요.");
                     $("#uploadDiv").show();
                 }
             });
@@ -514,6 +532,117 @@
 
 
     </script>
+    <style>
+        /* The Modal (background) */
+        .modal {
+          display: none; /* Hidden by default */
+          position: fixed; /* Stay in place */
+          z-index: 999; /* Sit on top */
+          padding-top: 100px; /* Location of the box */
+          left: 0;
+          top: 0;
+          width: 100%; /* Full width */
+          height: 100%; /* Full height */
+          overflow: auto; /* Enable scroll if needed */
+          background-color: rgb(0,0,0); /* Fallback color */
+          background-color: rgba(0,0,0,0.9); /* Black w/ opacity */
+        }
+
+        /* Modal Content (Image) */
+        .modal-content {
+          margin: auto;
+          display: block;
+          width: 80%;
+          max-width: 700px;
+        }
+
+        /* Caption of Modal Image (Image Text) - Same Width as the Image */
+        #caption {
+          margin: auto;
+          display: block;
+          width: 80%;
+          max-width: 700px;
+          text-align: center;
+          color: #ccc;
+          padding: 10px 0;
+          height: 150px;
+        }
+
+        /* Add Animation - Zoom in the Modal */
+        .modal-content, #caption {
+          animation-name: zoom;
+          animation-duration: 0.6s;
+        }
+
+        @keyframes zoom {
+          from {transform:scale(0)}
+          to {transform:scale(1)}
+        }
+        /* The Close Button */
+        .close {
+          position: absolute;
+          top: 50px;
+          right: 35px;
+          color: #f1f1f1;
+          font-size: 40px;
+          font-weight: bold;
+          transition: 0.3s;
+        }
+
+        .close:hover,
+        .close:focus {
+          color: #bbb;
+          text-decoration: none;
+          cursor: pointer;
+        }
+
+        /* 100% Image Width on Smaller Screens */
+        @media only screen and (max-width: 700px){
+          .modal-content {
+            width: 100%;
+          }
+        }
 
 
+    </style>
+    <div id="imageModal" class="modal">
+
+      <!-- The Close Button -->
+      <span class="close">&times;</span>
+
+      <!-- Modal Content (The Image) -->
+      <img class="modal-content" id="img01">
+
+      <!-- Modal Caption (Image Text) -->
+      <div id="caption"></div>
+    </div>
+    <script>
+        var modal = document.getElementById("imageModal");
+
+        // Get the image and insert it inside the modal - use its "alt" text as a caption
+        var modalImg = document.getElementById("img01");
+        $("#full").on("click", function(){
+          modal.style.display = "block";
+          modalImg.src = $("#path").val();
+
+        });
+
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+          modal.style.display = "none";
+        }
+        $(document).on("keyup", function(e){
+            if(e.keyCode == 27 || e.which == 27){
+              modal.style.display = "none";
+            }
+        });
+        /*
+        $(document).on("click", "#imageModal", function(){
+              modal.style.display = "none";
+        });
+        */
+    </script>
 {% include "common/footer.html" %}
