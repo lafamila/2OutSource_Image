@@ -46,7 +46,7 @@ def get_image(img_h, img_w, text, color, img, fontpath):
     fontcolor = (0, 0, 0, 0)
     if (color[0] + color[1] + color[2]) // 3 < 128:
         fontcolor = (255, 255, 255, 0)
-    font_size = min(img_w // (len(text) - text.count(" ") // 2), img_h)
+    font_size = min(img_w // (len(text) - text.count(" ") // 2), img_h)-2
     try:
         f_p = os.path.join(os.path.dirname(__file__), '../'+fontpath)
         with open(f_p, "rb") as f:
@@ -61,7 +61,7 @@ def get_image(img_h, img_w, text, color, img, fontpath):
     draw = ImageDraw.Draw(img_pil)
 
     st_x = (img_w - font_size * (len(text) - text.count(" ") // 2)) // 2
-    st_y = (img_h - font_size) // 2
+    st_y = (img_h - font_size) // 2 - 5
 
     draw.text((st_x, st_y), text, font=font, fill=fontcolor)
 
