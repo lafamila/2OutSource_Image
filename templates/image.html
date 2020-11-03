@@ -60,7 +60,7 @@
     <input type="hidden" id="sn"/>
     <input type="hidden" id="g_sn"/>
         <div class="row">
-          <div class="col-lg-8">
+          <div class="col-lg-8" id="image-col" style="position:fixed;top:280px;">
               <button type="button" class="btn btn-outline-white" id="full" style="display:none;" style="color:white!important;">
                   <svg width="2em" height="2em" viewBox="0 0 16 16" class="bi bi-arrows-fullscreen" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path style="color:white!important;" fill-rule="evenodd" d="M5.828 10.172a.5.5 0 0 0-.707 0l-4.096 4.096V11.5a.5.5 0 0 0-1 0v3.975a.5.5 0 0 0 .5.5H4.5a.5.5 0 0 0 0-1H1.732l4.096-4.096a.5.5 0 0 0 0-.707zm4.344 0a.5.5 0 0 1 .707 0l4.096 4.096V11.5a.5.5 0 1 1 1 0v3.975a.5.5 0 0 1-.5.5H11.5a.5.5 0 0 1 0-1h2.768l-4.096-4.096a.5.5 0 0 1 0-.707zm0-4.344a.5.5 0 0 0 .707 0l4.096-4.096V4.5a.5.5 0 1 0 1 0V.525a.5.5 0 0 0-.5-.5H11.5a.5.5 0 0 0 0 1h2.768l-4.096 4.096a.5.5 0 0 0 0 .707zm-4.344 0a.5.5 0 0 1-.707 0L1.025 1.732V4.5a.5.5 0 0 1-1 0V.525a.5.5 0 0 1 .5-.5H4.5a.5.5 0 0 1 0 1H1.732l4.096 4.096a.5.5 0 0 1 0 .707z"></path>
@@ -70,7 +70,7 @@
                 <div class="my-croppie"></div>
             </div>
           </div>
-          <div class="col-lg-4">
+          <div class="col-lg-4" style="position:absolute;right:0;">
             <table id="results" style="display:none;width:100%">
                 <colgroup>
                     <col width="30">
@@ -140,14 +140,12 @@
                     url: path,
                     viewport: { width: w, height: h },
                     boundary: { width: '100%', height: 600},
-                    showZoomer: false,
+                    showZoomer: true,
                     enableResize: true,
-                    enableOrientation: true,
                     mouseWheelZoom: 'ctrl',
                     points:bound
                 });
                 $('.my-croppie').on('update.croppie', function(ev, cropData) {
-                    console.log(cropData.points);
                     var points = cropData.points;
                     var x1 = parseInt(points[0]);
                     var y1 = parseInt(points[1]);
@@ -165,14 +163,6 @@
                     }
                     $("#save").attr("disabled", false);
                 });
-        }
-        changeCroppie = function(bound){
-            var w = bound[2] - bound[0];
-            var h = bound[3] - bound[1];
-            pie.bind({
-                    boundary: { width: w, height: h },
-                    points:[bound[0],bound[1],w,h]
-            });
         }
 
 
@@ -209,7 +199,12 @@
             var inputs = $("#results").find(".result-input");
             $.each(inputs, function(pIndex, pValue){
                 var idx = $(pValue).data('idx');
-                imageData[i]['info'][idx][2] = $(pValue).val();
+                if($(pValue).parent().parent().css('display') == 'none'){
+                    imageData[i]['info'][idx][2] = '#1#2#3#4#5';
+                }
+                else{
+                    imageData[i]['info'][idx][2] = $(pValue).val();
+                }
             });
             $("#save").attr("disabled", true);
         }
@@ -487,18 +482,24 @@
             var pResult = imageData[idx]['info'];
             var html = '';
             $.each(pResult, function(pIndex, pValue){
-                html += '<tr>';
-                html += '    <td>'+pValue[0]+'</td>';
-                html += '    <td><input type="text" style="width:100%;" class="result-input" data-idx="'+pIndex+'" value="'+pValue[2]+'"/></td>';
-                console.log(pValue[3]);
+                if('#1#2#3#4#5' != pValue[2]){
+                html += '<tr class="'+idx+'_'+pIndex+'">';
+                html += '    <td rowspan="2" style="text-align:left;vertical-align:middle;">'+pValue[0]+'</td>';
+                html += '    <td style="text-align:left;vertical-align:middle;">'+pValue[3]+'</td>';
                 html += '</tr>';
+                html += '<tr class="'+idx+'_'+pIndex+'">';
+                html += '    <td>';
+                html += '        <input type="text" style="width:80%;" class="result-input" data-idx="'+pIndex+'" value="'+pValue[2]+'"/>';
+                html += '        <input type="button" style="width:19%;" class="result-input-delete" data-sn="'+idx+'" data-idx="'+pIndex+'" value="삭제"/>';
+                html += '    </td>';
+                html += '</tr>';
+                }
             });
             $("#results").find("tbody").html(html);
             $("#results").show();
             $("#path").val(imageData[idx]['path']);
             $(document).find(".page-item").removeClass("active");
             $(document).find(".page-link").eq(idx+1).parent().addClass("active");
-            console.log($(document).find(".page-link").eq(idx+1).data("out"));
             if(parseInt($(document).find(".page-link").eq(idx+1).data("out")) == 1){
                 $("#submit").attr("disabled", false);
             }
@@ -507,6 +508,11 @@
             }
             $(document).find('.result-input').eq(0).focus();
         }
+        $(document).on("click", ".result-input-delete", function(){
+            var sn = $(this).data('sn');
+            var idx = $(this).data('idx');
+            $("."+sn+"_"+idx).hide();
+        });
     </script>
     <script>
         $(document).ready(function(){
@@ -648,5 +654,16 @@
               modal.style.display = "none";
         });
         */
+          $(window).scroll(function() {
+            var scrollTop = $(window).scrollTop(),
+              scrollLeft = $(window).scrollLeft();
+              if(scrollTop <= 200){
+                $("#image-col").css('top', 260-scrollTop);
+              }
+              else{
+                $("#image-col").css('top', 60);
+              }
+          });
+
     </script>
 {% include "common/footer.html" %}

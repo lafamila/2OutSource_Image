@@ -88,8 +88,8 @@ def get_translate(text):
 
 def get_mask(results, img):
     black = np.zeros(img.shape, np.uint8)
-    for text, bound, new_text in results:
-        if new_text.strip() != '':
+    for text, bound, new_text, _ in results:
+        if new_text != '#1#2#3#4#5':
             info = get_info(bound)
 
             x, y = info["start"]
@@ -381,20 +381,20 @@ def generateImage():
         mask = get_mask(result, image)
         dst = cv2.inpaint(image, mask, 3, cv2.INPAINT_TELEA)
         for text, bound, new_text, _ in result:
+            if new_text != "#1#2#3#4#5":
+                info = get_info(bound)
+                x, y = info["start"]
+                w, h = info["width"], info["height"]
 
-            info = get_info(bound)
-            x, y = info["start"]
-            w, h = info["width"], info["height"]
+                try:
+                    sub = Image.fromarray(dst[y:y + h, x:x + w], 'RGB')
 
-            try:
-                sub = Image.fromarray(dst[y:y + h, x:x + w], 'RGB')
-
-                colors = max(sub.getcolors(sub.size[0] * sub.size[1]))
-                subimg = get_image(h, w, new_text, colors[1], dst[y:y + h, x:x + w], font_path)
-                dst[y:y + h, x:x + w] = subimg
-            except Exception as e:
-                print(str(e))
-                continue
+                    colors = max(sub.getcolors(sub.size[0] * sub.size[1]))
+                    subimg = get_image(h, w, new_text, colors[1], dst[y:y + h, x:x + w], font_path)
+                    dst[y:y + h, x:x + w] = subimg
+                except Exception as e:
+                    print(str(e))
+                    continue
             # 저장
         p, ext = img_path.split(".")
         path = "{}_result.{}".format(p, ext)
