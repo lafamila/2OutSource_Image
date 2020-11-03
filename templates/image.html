@@ -490,6 +490,7 @@
                 html += '<tr>';
                 html += '    <td>'+pValue[0]+'</td>';
                 html += '    <td><input type="text" style="width:100%;" class="result-input" data-idx="'+pIndex+'" value="'+pValue[2]+'"/></td>';
+                console.log(pValue[3]);
                 html += '</tr>';
             });
             $("#results").find("tbody").html(html);
@@ -520,6 +521,9 @@
                     $("#dropZone").html("사용권이 만료되었습니다.");
                 }
                 else if(result.data == -2){
+                    $("#dropZone").html("신청된 사용권의 승인이 필요합니다.");
+                }
+                else if(result.data == -3){
                     $("#dropZone").html("다시 로그인해주세요.");
                 }
                 else{

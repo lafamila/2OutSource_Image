@@ -29,7 +29,7 @@ def toInt(bounds):
     return [ [int(b) for b in bound] for bound in bounds]
 
 def find_ch(results):
-    return [(text, toInt(boundaries), get_translate(text)) for text, boundaries in results if len(re.findall(r'[\u4e00-\u9fff]+', text)) > 0]
+    return [(text, toInt(boundaries), *get_translate(text)) for text, boundaries in results if len(re.findall(r'[\u4e00-\u9fff]+', text)) > 0]
 
 
 def get_info(data):
@@ -83,7 +83,7 @@ def get_translate(text):
     res = requests.post("https://naveropenapi.apigw.ntruss.com/nmt/v1/translation", headers=headers, data=data)
     resj = json.loads(res.text)
     last = resj["message"]["result"]["translatedText"]
-    return last
+    return last, temp
 
 
 def get_mask(results, img):
@@ -140,6 +140,16 @@ def adminLogin():
 
 @fp.route('/searchUser', methods=['POST'])
 def searchUser():
+
+    page = int(request.form.get("page"))
+
+    type = request.form.get('type')
+    if type == 'F':
+        where = " AND IFNULL(r.R_TYPE, 'O')='F' AND u.R_SN>0 "
+    elif type == 'N':
+        where = " AND IFNULL(r.R_TYPE, 'O')='N' AND u.R_SN>0"
+    else:
+        where = ""
     cond = int(request.form.get('condition'))
     q = request.form.get('query')
     if cond == 1:
@@ -149,43 +159,49 @@ def searchUser():
     elif cond == 3:
         col = "u.U_CP"
     elif cond == 4:
-        result = db(
-            "SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, -1) AS R_TYPE, r.REGIST_DTM as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_STTUS=0 WHERE 1")
+        query = "SELECT u.*, IFNULL(r.R_TYPE, 'O') AS R_TYPE, r.REGIST_DTM as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_SN=IF(u.R_SN < 0, -u.R_SN, u.R_SN) WHERE 1 {} ORDER BY u.REGIST_DTM DESC".format(where)
+        result = db(query + " LIMIT %s OFFSET %s", (10, page * 10))
+        count = db(query)
+
         if len(result) > 0:
-            return jsonify({"result": 1, "data": result})
+            return jsonify({"result": 1, "data": result, "recordsTotal" : len(count)})
         else:
-            return jsonify({"result": 0})
+            return jsonify({"result": 0, "recordsTotal" : 0})
     else:
-        result = db(
-            "SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, -1) AS R_TYPE, r.regist_dtm as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_STTUS=0 WHERE u.U_ID LIKE %s OR u.U_NM LIKE %s OR u.U_CP LIKE %s ORDER BY u.REGIST_DTM DESC", ('%{}%'.format(q), '%{}%'.format(q), '%{}%'.format(q)))
+        query = "SELECT u.*, IFNULL(r.R_TYPE, 'O') AS R_TYPE, r.REGIST_DTM as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_SN=IF(u.R_SN < 0, -u.R_SN, u.R_SN) WHERE (u.U_ID LIKE %s OR u.U_NM LIKE %s OR u.U_CP LIKE %s) {} ORDER BY u.REGIST_DTM DESC".format(where)
+        print(query)
+        result = db(query + " LIMIT %s OFFSET %s", ('%{}%'.format(q), '%{}%'.format(q), '%{}%'.format(q), 10, page * 10))
+        count = db(query, ('%{}%'.format(q), '%{}%'.format(q), '%{}%'.format(q)))
+
         if len(result) > 0:
-            return jsonify({"result": 1, "data": result})
+            return jsonify({"result": 1, "data": result, "recordsTotal" : len(count)})
         else:
-            return jsonify({"result": 0})
+            return jsonify({"result": 0, "recordsTotal" : 0})
 
+    query = "SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, 'O') AS R_TYPE, r.REGIST_DTM as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_SN=IF(u.R_SN < 0, -u.R_SN, u.R_SN) WHERE {} {} LIKE %s".format(col, where)
+    result = db(query + " LIMIT %s OFFSET %s", ('%{}%'.format(q), 10, page * 10))
+    count = db(query, ('%{}%'.format(q)))
 
-    result = db("SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, -1) AS R_TYPE, r.regist_dtm as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_STTUS=0 WHERE {} LIKE %s".format(col), '%{}%'.format(q))
     if len(result) > 0:
-        return jsonify({"result" : 1, "data" : result})
+        return jsonify({"result": 1, "data": result, "recordsTotal": len(count)})
     else:
-        return jsonify({"result" : 0})
+        return jsonify({"result": 0, "recordsTotal": 0})
+
 
 @fp.route("/processRequest", methods=['POST'])
 def processRequest():
-    r_sn = request.form.get('sn')
+    u_sns = request.form.getlist('u_sns[]')
     end = request.form.get('end')
-    result = db("SELECT * FROM request WHERE R_SN=%s", r_sn)
-    if result:
-        u_sn = result[0]['u_sn']
-        r_type = result[0]['r_type']
-        if r_type == 0:
-            db("UPDATE user SET U_TP=0, U_DTM=%s WHERE U_SN=%s", (end, u_sn))
-        else:
-            db("UPDATE user SET U_DTM=%s WHERE U_SN=%s", (end, u_sn))
-        db("UPDATE request SET R_STTUS=1 WHERE R_SN=%s", r_sn)
-        return jsonify({"result" : 1})
-    else:
-        return jsonify({"result" : 0, "msg" : "오류가 발생했습니다."})
+    start = request.form.get('start')
+    for u_sn in u_sns:
+        users = db("SELECT * FROM user WHERE U_SN=%s", u_sn)
+        if users:
+            user = users[0]
+            r_sn = user['r_sn']
+            if r_sn > 0:
+                r_sn *= -1
+            db("UPDATE user SET R_SN=%s, U_START=%s, U_END=%s WHERE U_SN=%s", (r_sn, start, end, u_sn))
+    return jsonify({"result" : 1})
 @fp.route("/logout", methods=['POST'])
 def logout():
     del session['u_sn']
@@ -266,7 +282,7 @@ def join():
         return jsonify({'result': 0, 'msg': '존재하는 아이디입니다.'})
     try:
         now = getToday(time=True)
-        u_sn = db("INSERT INTO user(U_ID, U_PW, U_NM, U_CP, U_PHONE, U_MAIL, U_DTM, REGIST_DTM) VALUES (%s, %s, %s, %s, %s, %s, NULL, %s)", (u_id, u_pw, u_nm, u_cp, u_phone, u_mail, now))
+        u_sn = db("INSERT INTO user(U_ID, U_PW, U_NM, U_CP, U_PHONE, U_MAIL, REGIST_DTM) VALUES (%s, %s, %s, %s, %s, %s, %s)", (u_id, u_pw, u_nm, u_cp, u_phone, u_mail, now))
         session['u_sn'] = u_sn
         return jsonify({'result': 1})
     except Exception as e:
@@ -282,46 +298,44 @@ def uploadImage():
             user = result[0]
 
             now = datetime.datetime.strptime(getToday(), '%Y-%m-%d')
-            if user['u_dtm']:
-                limit = datetime.datetime.strptime(user['u_dtm'], '%Y-%m-%d')
-                if (limit-now).total_seconds() >= 0:
-                    expired = 0
-                else:
-                    expired = 2
-            else:
-                expired = 1
+            if user['u_start'] and user['u_end']:
+                u_start = datetime.datetime.strptime(user['u_start'], '%Y-%m-%d')
+                u_end = datetime.datetime.strptime(user['u_end'], '%Y-%m-%d')
+                if (u_end-now).total_seconds() >= 0 and (now-u_start).total_seconds() >= 0:
+                    font = request.files.get('font')
+                    if font:
+                        f_ext = font.filename.split(".")[-1]
+                        f_path = 'static/files/{}.{}'.format(datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"),
+                                                             f_ext)
+                        font.save('./' + f_path)
+                    else:
+                        f_path = 'static/files/malgun.ttf'
+                    g_sn = db("INSERT INTO grouped(U_SN, F_PATH, REGIST_DTM) VALUES (%s, %s, %s)",
+                              (u_sn, f_path, getToday(time=True)))
+                    os.makedirs('./static/files/{}'.format(g_sn), exist_ok=True)
+                    u_files = request.files.getlist("files[]")
+                    data = []
+                    for idx, u_file in enumerate(u_files):
+                        origin = u_file.filename
+                        name, ext = origin.split(".")
+                        path = '/static/files/{}/{}_{}_{}.{}'.format(g_sn, g_sn, datetime.datetime.now().strftime(
+                            "%y_%m_%d_%H_%M_%S"), idx, ext)
+                        u_file.save('.' + path)
+                        image = Image.open('.' + path)
+                        width, height = image.size
+                        w = 300
+                        h = int(300 * height / width)
+                        i_sn = db("INSERT INTO uploaded(G_SN, PATH) VALUES (%s, %s)", (g_sn, path))
+                        data.append({'sn': i_sn, 'height': h})
+                    # db("UPDATE ordered SET O_CONFIRM_PATH=%s WHERE O_SN=%s", (path, sn))
+                    return jsonify({"result": 1, "msg": "업로드되었습니다.", "data": data, "sn": g_sn})
 
-            print(user, expired)
-            if expired == 1:
+                else:
+                    return jsonify({"result": 0, "msg": "사용권의 사용기간이 만료되었습니다."})
+            else:
                 return jsonify({"result" : 0, "msg" : "사용권이 없습니다."})
-            elif expired == 2:
-                return jsonify({"result" : 0, "msg" : "사용권의 사용기간이 만료되었습니다."})
 
-            else:
-                font = request.files.get('font')
-                if font:
-                    f_ext = font.filename.split(".")[-1]
-                    f_path = 'static/files/{}.{}'.format(datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"), f_ext)
-                    font.save('./' + f_path)
-                else:
-                    f_path = 'static/files/malgun.ttf'
-                g_sn = db("INSERT INTO grouped(U_SN, F_PATH, REGIST_DTM) VALUES (%s, %s, %s)", (u_sn, f_path, getToday(time=True)))
-                os.makedirs('./static/files/{}'.format(g_sn), exist_ok=True)
-                u_files = request.files.getlist("files[]")
-                data = []
-                for idx, u_file in enumerate(u_files):
-                    origin = u_file.filename
-                    name, ext = origin.split(".")
-                    path = '/static/files/{}/{}_{}_{}.{}'.format(g_sn, g_sn, datetime.datetime.now().strftime("%y_%m_%d_%H_%M_%S"), idx, ext)
-                    u_file.save('.' + path)
-                    image = Image.open('.' + path)
-                    width, height = image.size
-                    w = 300
-                    h = int(300 * height / width)
-                    i_sn = db("INSERT INTO uploaded(G_SN, PATH) VALUES (%s, %s)", (g_sn, path))
-                    data.append({'sn' : i_sn, 'height' : h})
-                # db("UPDATE ordered SET O_CONFIRM_PATH=%s WHERE O_SN=%s", (path, sn))
-                return jsonify({"result": 1, "msg": "업로드되었습니다.", "data": data, "sn" : g_sn})
+
         else:
             return jsonify({"result" : 0, "msg" : "재로그인이 필요합니다."})
 
@@ -366,21 +380,21 @@ def generateImage():
         image = cv2.imread('.'+img_path)
         mask = get_mask(result, image)
         dst = cv2.inpaint(image, mask, 3, cv2.INPAINT_TELEA)
-        for text, bound, new_text in result:
-            if new_text.strip() != '':
-                info = get_info(bound)
-                x, y = info["start"]
-                w, h = info["width"], info["height"]
+        for text, bound, new_text, _ in result:
 
-                try:
-                    sub = Image.fromarray(dst[y:y + h, x:x + w], 'RGB')
+            info = get_info(bound)
+            x, y = info["start"]
+            w, h = info["width"], info["height"]
 
-                    colors = max(sub.getcolors(sub.size[0] * sub.size[1]))
-                    subimg = get_image(h, w, new_text, colors[1], dst[y:y + h, x:x + w], font_path)
-                    dst[y:y + h, x:x + w] = subimg
-                except Exception as e:
-                    print(str(e))
-                    continue
+            try:
+                sub = Image.fromarray(dst[y:y + h, x:x + w], 'RGB')
+
+                colors = max(sub.getcolors(sub.size[0] * sub.size[1]))
+                subimg = get_image(h, w, new_text, colors[1], dst[y:y + h, x:x + w], font_path)
+                dst[y:y + h, x:x + w] = subimg
+            except Exception as e:
+                print(str(e))
+                continue
             # 저장
         p, ext = img_path.split(".")
         path = "{}_result.{}".format(p, ext)
@@ -415,15 +429,30 @@ def getTp():
     if result:
         user = result[0]
         now = datetime.datetime.strptime(getToday(), '%Y-%m-%d')
-        if user['u_dtm']:
-            limit = datetime.datetime.strptime(user['u_dtm'], '%Y-%m-%d')
-            if (limit-now).total_seconds() >= 0:
-                expired = 0
+        if user['r_sn'] > 0:
+            #신청중
+            isRequested = 1
+        elif user['u_start'] and user['u_end']:
+            u_start = datetime.datetime.strptime(user['u_start'], '%Y-%m-%d')
+            u_end = datetime.datetime.strptime(user['u_end'], '%Y-%m-%d')
+            if (u_end-now).total_seconds() >= 0 and (now-u_start) >= 0:
+                #사용중
+                isRequested = 2
             else:
-                expired = 1
+                #만료됨
+                isRequested = -1
         else:
-            expired = 1
-        return jsonify({'result' : 1, 'free' : user['u_tp'], 'non' : expired})
+            #신청한적없음
+            isRequested = 0
+        if isRequested <= 0:
+            req = db("SELECT * FROM request WHERE U_SN=%s AND R_TYPE='F'", u_sn)
+            if req:
+                return jsonify({'result' : 1, 'isRequested' : isRequested, 'free' : 0})
+            else:
+                return jsonify({'result': 1, 'isRequested': isRequested, 'free': 1})
+        else:
+            return jsonify({'result': 1, 'isRequested': isRequested, 'free': 0})
+
     else:
         return jsonify({'result' : 0})
 
@@ -432,16 +461,18 @@ def setTp():
     u_sn = session['u_sn']
     t_type = request.form.get('type')
     now = getToday(time=True)
-    result = db("SELECT * FROM request WHERE U_SN=%s AND R_STTUS=0", u_sn)
-    if result:
+    result = db("SELECT * FROM user WHERE U_SN=%s", u_sn)
+
+    if result and result[0]['r_sn'] > 0:
         return jsonify({"result" : 0, "msg" : "이미 신청된 상태입니다."})
     else:
-        if int(t_type) == 0:
-            users = db("SELECT * FROM user WHERE U_SN=%s", u_sn)
-            if users and users[0]['u_tp'] != -1:
+        if t_type == 'F':
+            req = db("SELECT * FROM request WHERE U_SN=%s AND R_TYPE='F'", u_sn)
+            if req:
                 return jsonify({"result": 0, "msg": "이미 체험하셨습니다."})
 
-        db("INSERT INTO request(U_SN, R_TYPE, R_STTUS, REGIST_DTM) VALUES (%s, %s, %s, %s)", (u_sn, t_type, 0, now))
+        r_sn = db("INSERT INTO request(U_SN, R_TYPE, REGIST_DTM) VALUES (%s, %s, %s)", (u_sn, t_type, now))
+        db("UPDATE user SET R_SN=%s WHERE U_SN=%s", (r_sn, u_sn))
         return jsonify({"result" : 1, "msg" : "신청되었습니다."})
 
 @fp.route('/getArticle')
@@ -505,38 +536,37 @@ def isExpired():
             user = result[0]
 
             now = datetime.datetime.strptime(getToday(), '%Y-%m-%d')
-            if user['u_dtm']:
-                limit = datetime.datetime.strptime(user['u_dtm'], '%Y-%m-%d')
-                if (limit-now).total_seconds() >= 0:
-                    expired = 0
+            if user['u_start'] and user['u_end']:
+                u_start = datetime.datetime.strptime(user['u_start'], '%Y-%m-%d')
+                u_end = datetime.datetime.strptime(user['u_end'], '%Y-%m-%d')
+                if (u_end-now).total_seconds() >= 0 and (now-u_start).total_seconds() >= 0:
+                    # 사용가능
+                    return jsonify({"data": 1})
                 else:
-                    expired = 2
+                    # 만료됨
+                    return jsonify({"data": -1})
+            elif user['r_sn'] > 0:
+                # 승인대기
+                return jsonify({"data" : -2})
             else:
-                expired = 1
-
-            print(user, expired)
-            if expired == 1:
+                # 사용권 신청하지 않음
                 return jsonify({"data" : 0})
-            elif expired == 2:
-                return jsonify({"data" : -1})
 
-            else:
-                return jsonify({"data" : 1})
-    return jsonify({"data" : -2})
+    return jsonify({"data" : -3})
 
 
 @fp.route('/getAlerts')
 def getAlerts():
 
     where = ""
-    where += "AND r.R_TYPE = 1"
-    query = "SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, -1) AS R_TYPE, r.regist_dtm as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_STTUS=0 WHERE 1=1 {} ORDER BY r.REGIST_DTM DESC".format(where)
+    where += "AND r.R_TYPE = 'N'"
+    query = "SELECT u.*, r.R_TYPE, r.REGIST_DTM as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_SN=u.R_SN WHERE 1=1 {} ORDER BY r.REGIST_DTM DESC".format(where)
     money = db(query+" LIMIT 3 OFFSET 0")
     moneyCount = len(db(query))
 
     where = ""
     where += "AND r.R_TYPE = 0"
-    query = "SELECT u.*, r.R_SN, IFNULL(r.R_TYPE, -1) AS R_TYPE, r.regist_dtm as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_STTUS=0 WHERE 1=1 {} ORDER BY r.REGIST_DTM DESC".format(where)
+    query = "SELECT u.*, r.R_TYPE, r.REGIST_DTM as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_SN=u.R_SN WHERE 1=1 {} ORDER BY r.REGIST_DTM DESC".format(where)
     free = db(query+" LIMIT 3 OFFSET 0")
     freeCount = len(db(query))
 

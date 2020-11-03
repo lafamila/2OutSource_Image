@@ -134,7 +134,7 @@
                         <div id="money-list">
 
                         </div>
-                        <a class="text-center dropdown-item small text-gray-500" href="/admin/request">모든 신청 내역보기</a>
+                        <a class="text-center dropdown-item small text-gray-500" href="/admin/request?type=N">모든 신청 내역보기</a>
                     </div>
                 </div>
                 <div class="shadow dropdown-list dropdown-menu dropdown-menu-right" aria-labelledby="alertsDropdown"></div>
@@ -145,7 +145,7 @@
                         class="dropdown-menu dropdown-menu-right dropdown-list dropdown-menu-right animated--grow-in" role="menu">
                         <h6 class="dropdown-header">무료신청 내역</h6>
                         <div id="free-list"></div>
-                        <a class="text-center dropdown-item small text-gray-500" href="/admin/request">모든 신청 내역보기</a>
+                        <a class="text-center dropdown-item small text-gray-500" href="/admin/request?type=F">모든 신청 내역보기</a>
                     </div>
                 </div>
                 <div class="shadow dropdown-list dropdown-menu dropdown-menu-right" aria-labelledby="alertsDropdown"></div>
@@ -197,7 +197,7 @@
             var html = '';
             $.each(result.money, function(pIndex, pValue){
 
-                html += '<a class="d-flex align-items-center dropdown-item" href="/admin/request">';
+                html += '<a class="d-flex align-items-center dropdown-item" href="/admin/request?u_id='+pValue.u_id+'">';
                 html += '    <div class="dropdown-list-image mr-3">';
                 html += '        <span class="small text-gray-500">'+pValue.u_id+'</div>';
                 html += '    </div>';
@@ -215,7 +215,7 @@
 
             var html = '';
             $.each(result.free, function(pIndex, pValue){
-                html += '<a class="d-flex align-items-center dropdown-item" href="/admin/request">';
+                html += '<a class="d-flex align-items-center dropdown-item" href="/admin/request?u_id='+pValue.u_id+'">';
                 html += '    <div class="dropdown-list-image mr-3">';
                 html += '        <span class="small text-gray-500">'+pValue.u_id+'</div>';
                 html += '    </div>';

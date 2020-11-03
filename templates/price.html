@@ -16,12 +16,12 @@
       <div class="col-lg-6" style="border:1px solid #eee;padding-top:40px;padding-bottom:40px;">
         <h2>무료계정</h2>
         <p>&nbsp;무료계정 3일 체험판</p>
-        <button id="free" data-type="0" disabled>무료등록</button>
+        <button id="free" data-type="F" disabled>무료등록</button>
       </div>
       <div class="col-lg-6" style="border:1px solid #eee;padding-top:40px;padding-bottom:40px;">
         <h2>월 요금제</h2>
         <p>&nbsp;월 15만원</p>
-        <button id="non" data-type="1" disabled>유료등록</button>
+        <button id="non" data-type="N" disabled>유료등록</button>
       </div>
     </div>
 
@@ -35,30 +35,39 @@
 
   </div>
     <script>
+    getTp = function(){
         $.ajax({
             url:'/ajax/getTp',
             method:'POST'
         }).done(function(data){
+            console.log(data);
             if(data.result == 1){
-                if(data.free == -1){
-                    $("#free").attr("disabled", false);
-                }
-                else{
-                    $("#free").attr("disabled", true);
-                    $("#free").val("체험 완료");
-                }
 
-                if(data.non == 1){
-                    $("#non").attr("disabled", false);
+                if(data.isRequested > 0){
+                    if(data.isRequested == 2){
+                      $("#non").val("이용중");
+                      $("#free").val("이용중");
+                    }
+                    $("#non").attr("disabled", true);
+                    $("#free").attr("disabled", true);
+
                 }
                 else{
-                    $("#non").attr("disabled", true);
+                    if(data.free == 1){
+                        $("#free").attr("disabled", false);
+                    }
+                    else{
+                        $("#free").attr("disabled", true);
+                        $("#free").val("체험 완료");
+                    }
+                    $("#non").attr("disabled", false);
                 }
             }
             else{
                 alert("뭔가 잘못되어있습니다.");
             }
         });
+    }
         $("#free, #non").on("click", function(){
             var t_type = $(this).data('type');
             $.ajax({
@@ -67,8 +76,10 @@
                 data : {'type' : t_type}
             }).done(function(data){
                 alert(data.msg);
+                getTp();
             });
         });
+    getTp();
     </script>
 
 {% include "common/footer.html" %}

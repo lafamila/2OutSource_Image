@@ -3,51 +3,106 @@
 {% include "admin/common/header.html" %}
 {% endwith %}
 {% endwith %}
+    <style>
+.card-header:hover, .card *[aria-expanded="true"] {
+    cursor: default;
+    background-color: #f8f8f8;
+    color: white!important;
+}
 
+    </style>
     <div class="container-fluid">
         <h3 class="text-dark mb-4">고객관리</h3>
         <div class="row">
             <div class="col-xl-3 align-self-center" style="text-align: center;">
                 <select style="text-align: center;width: 100%;" id="condition">
+                    {% if u_id %}
+                    <option value="0">전체</option>
+                    <option value="1" selected="">ID</option>
+                    <option value="2">이름</option>
+                    <option value="3">업체명</option>
+                    <option value="4">신청자</option>
+                    {% else %}
                     <option value="0" selected="">전체</option>
                     <option value="1">ID</option>
                     <option value="2">이름</option>
                     <option value="3">업체명</option>
                     <option value="4">신청자</option>
+                    {% endif %}
                 </select>
             </div>
+                    {% if u_id %}
+            <div class="col-xl-3 align-self-center" style="text-align: center;"><input type="text" placeholder="검색 내용" style="width: 100%;" id="query" value="{{u_id}}"></div>
+                    {% else %}
             <div class="col-xl-3 align-self-center" style="text-align: center;"><input type="text" placeholder="검색 내용" style="width: 100%;" id="query"></div>
+                    {% endif %}
             <div class="col-xl-2"><button class="btn btn-primary" type="button" id="goSearch">검색</button></div>
-            <div class="col-xl-2">
-                    <input type="hidden" name="r_sn" id="r_sn">
+        </div>
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <p class="text-primary m-0 font-weight-bold">요청 목록</p>
+
+            </div>
+            <div class="card-body">
+                <div class="table-responsive table mt-2" id="dataTable_div" role="grid" aria-describedby="dataTable_info">
+                    <table class="table my-0" id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>적용</th>
+                                <th>No.</th>
+                                <th>사용자</th>
+                                <th>ID</th>
+                                <th>업체명</th>
+                                <th>구분</th>
+                                <th>사용기간</th>
+                                <th>연락처</th>
+                                <th>이메일</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 align-self-center">
+                        <p id="dataTable_info" class="dataTables_info" role="status" aria-live="polite">Showing <span id="start">0</span> to <span id="end">0</span> of <span id="recordsTotal">0</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <nav class="d-lg-flex justify-content-lg-end dataTables_paginate paging_simple_numbers">
+                            <ul class="pagination" id="pagination">
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
             </div>
         </div>
 
-    <div class="row" id="userListRow" style="display:none;">
-        <div class="container-fluid">
-            <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="false">
-            <div class="carousel-inner row w-100 mx-auto" id="userList">
-            </div>
-            <a class="carousel-control carousel-control-prev" href="#myCarousel" role="button" data-slide="prev">
-            <span type="button" class="btn btn-outline-primary">
-                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-chevron-compact-left" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" d="M9.224 1.553a.5.5 0 0 1 .223.67L6.56 8l2.888 5.776a.5.5 0 1 1-.894.448l-3-6a.5.5 0 0 1 0-.448l3-6a.5.5 0 0 1 .67-.223z"></path>
-                </svg>
-            </span>
-            </a>
-            <a class="carousel-control carousel-control-next" href="#myCarousel" role="button" data-slide="next">
-            <span type="button" class="btn btn-outline-primary">
-                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-chevron-compact-right" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" d="M6.776 1.553a.5.5 0 0 1 .671.223l3 6a.5.5 0 0 1 0 .448l-3 6a.5.5 0 1 1-.894-.448L9.44 8 6.553 2.224a.5.5 0 0 1 .223-.671z"></path>
-                </svg>
-            </span>
-            </a>
+
+<!--    <div class="row" id="userListRow" style="display:none;">-->
+<!--        <div class="container-fluid">-->
+<!--            <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="false">-->
+<!--            <div class="carousel-inner row w-100 mx-auto" id="userList">-->
+<!--            </div>-->
+<!--            <a class="carousel-control carousel-control-prev" href="#myCarousel" role="button" data-slide="prev">-->
+<!--            <span type="button" class="btn btn-outline-primary">-->
+<!--                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-chevron-compact-left" fill="currentColor" xmlns="http://www.w3.org/2000/svg">-->
+<!--                    <path fill-rule="evenodd" d="M9.224 1.553a.5.5 0 0 1 .223.67L6.56 8l2.888 5.776a.5.5 0 1 1-.894.448l-3-6a.5.5 0 0 1 0-.448l3-6a.5.5 0 0 1 .67-.223z"></path>-->
+<!--                </svg>-->
+<!--            </span>-->
+<!--            </a>-->
+<!--            <a class="carousel-control carousel-control-next" href="#myCarousel" role="button" data-slide="next">-->
+<!--            <span type="button" class="btn btn-outline-primary">-->
+<!--                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-chevron-compact-right" fill="currentColor" xmlns="http://www.w3.org/2000/svg">-->
+<!--                    <path fill-rule="evenodd" d="M6.776 1.553a.5.5 0 0 1 .671.223l3 6a.5.5 0 0 1 0 .448l-3 6a.5.5 0 1 1-.894-.448L9.44 8 6.553 2.224a.5.5 0 0 1 .223-.671z"></path>-->
+<!--                </svg>-->
+<!--            </span>-->
+<!--            </a>-->
 
 
-            </a>
-            </div>
-        </div>
-    </div>
+<!--            </a>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
     <div>
         <span>
             <div class="btn-group" role="group">
@@ -61,7 +116,7 @@
         </span>
         <span>
 
-            <input type="text" id="date-start" class="form-control" value="" style="width:auto;display:inline-block;" disabled> ~ <input type="text" id="date-end" class="form-control" value="" style="width:auto;display:inline-block;">
+            <input type="text" id="date-start" class="form-control" value="" style="width:auto;display:inline-block;"> ~ <input type="text" id="date-end" class="form-control" value="" style="width:auto;display:inline-block;">
 
         </span>
         <span>
@@ -69,100 +124,181 @@
         </span>
     </div>
     <script>
-        $("#goSearch").on("click", function(){
-            var condition = $("#condition").val();
-            var query = $("#query").val();
-            if(query == "" || query == null){
-                if(condition != 0){
-                    $("#query").focus();
-                    alert("검색 내용을 입력해주세요");
-                    return false;
-                }
-            }
-            if(condition == -1 || condition == "" || condition == null){
-                $("#condition").focus();
-                alert("검색 조건을 선택해주세요");
+    var table;
+    reload = function(currentPage){
+        var condition = $("#condition").val();
+        var query = $("#query").val();
+        if(query == "" || query == null){
+            if(condition != 0){
+                $("#query").focus();
+                alert("검색 내용을 입력해주세요");
                 return false;
             }
-            var params = {"condition" : condition, "query" : query};
-            $.ajax({
-                url : '/ajax/searchUser',
-                method : 'post',
-                data : params
-            }).done(function(data){
-                if(data.result == 1){
-                    alert("검색 성공");
-                    $("#submit").attr("disabled", true);
-                    console.log(data.data);
-                    var html = '';
-                    //html += '<div class="carousel-item col-md-3 active">';
-                    $.each(data.data, function(pIndex, pValue){
-                        var _class = (pIndex == 0) ? ' active' : '';
-                        var r_sn = -1;
-                        if(pValue.r_sn != null){
-                            r_sn = parseInt(pValue.r_sn);
-                        }
-                        html += '<div class="carousel-item col-md-3 userItem'+_class+'" data-sn="'+r_sn+'">';
-                        html += '   <div class="card">';
-                        html += '       <div class="card-body">';
-                        html += '           <h4 class="card-title">'+pValue.u_id+'</h4>';
-                        html += '           <p class="card-text">이름 : '+pValue.u_nm+'</p>';
-                        html += '           <p class="card-text">회사 : '+pValue.u_cp+'</p>';
-                        var r_type = parseInt(pValue.r_type);
-                        var _type = '';
-                        if(r_type == 0)
-                            _type = '무료';
-                        else if(r_type == 1)
-                            _type = '유료';
+        }
+        if(condition == -1 || condition == "" || condition == null){
+            $("#condition").focus();
+            alert("검색 조건을 선택해주세요");
+            return false;
+        }
+        {% if type %}
+        var params = {"condition" : condition, "query" : query, "page" : currentPage, "type" : '{{type}}'};
+        {% else %}
+        var params = {"condition" : condition, "query" : query, "page" : currentPage};
+        {% endif %}
+        console.log(params);
+        $.ajax({
+            url : '/ajax/searchUser',
+            method : 'post',
+            data : params
+        }).done(function(result){
+            if(result.result == 1){
 
-                        if(_type != ''){
-                            html += '       <p class="card-text">신청 : '+_type+'</p>';
-                            html += '       <p class="card-text">날짜 : '+pValue.dtm+'</p>';
-                        }
-                        html += '       </div>';
-                        html += '   </div>';
-                        html += '</div>';
-                    });
-                    $("#userList").html(html);
-                    $("#userListRow").show();
-                    if(data.data.length <= 4){
-                        $(".carousel-control").hide();
-                    }
+//////////////////////////////////////////////////////////////////////
 
 
 
-
+                if(table){
+                    table.destroy();
                 }
-                else{
-                    $("#userListRow").hide();
-                    alert("일치하는 사용자가 없습니다.");
+                table = $('#dataTable').DataTable( {
+                    paging:  false,
+                    info:   false,
+                    searching: false,
+                    pageLength: 5,
+                    data: result.data,
+                    columns: [
+                        {   data: 'r_sn',
+                            className: 'text-center',
+                            render: function ( data, type, row, meta ) {
+
+                                if(parseInt(data) != 0){
+                                    return '<input type="checkbox" class="userItem" data-sn="'+row.u_sn+'" />';
+                                }
+                                else{
+                                    return '';
+                                }
+                            }
+                        },
+                        {   data: 'u_sn',
+                            className: 'text-center',
+                            render: function ( data, type, row, meta ) {
+
+                                return meta.settings._iDisplayStart + meta.row + 1;
+                            }
+                        },
+                        {   data: 'u_nm',
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                return data;
+                            }
+                        },
+                        {   data: 'u_id',
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                return data;
+                            }
+                        },
+                        {   data: 'u_cp',
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                return data;
+                            }
+                        },
+                        {   data: 'r_type',
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                var _type = "";
+                                if(data == 'F')
+                                    _type = '무료';
+                                else if(data == 'N')
+                                    _type = '유료';
+                                return _type;
+                            }
+                        },
+                        {   data: 'u_sn',
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                if(row.u_start && row.u_end)
+                                    return row.u_start + "~" + row.u_end;
+                                else
+                                    return "";
+                            }
+                        },
+                        {   data: 'u_phone',
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                return data;
+                            }
+                        },
+                        {   data: 'u_mail',
+                            className: 'text-center',
+                            render: function ( data, type, row ) {
+                                return data;
+                            }
+                        }
+                    ]
+                } );
+
+                var totalPage = parseInt((result.recordsTotal-1)/10) + 1;
+                $("#start").html(currentPage*10);
+                $("#end").html(currentPage*10 + result.data.length);
+                $("#recordsTotal").html(result.recordsTotal);
+                var html = '';
+                var __class = (currentPage == 0) ? ' disabled' : '';
+                html += '<li class="page-item'+__class+'"><a class="page-link" aria-label="Previous" id="dataTable_previous" aria-controls="dataTable" href="javascript:reload('+(currentPage-1)+');"><span aria-hidden="true">«</span></a></li>';
+                for(let i=0;i < totalPage;i++){
+                    let _class = (i == currentPage) ? " active" : "";
+                    html += '<li class="page-item'+_class+'"><a class="page-link" aria-controls="dataTable"  href="javascript:reload('+i+');">'+(i+1)+'</a></li>';
                 }
-            });
+                var __class = (currentPage == (totalPage-1)) ? ' disabled' : '';
+                html += '<li class="page-item'+__class+'"><a class="page-link" aria-label="Next" id="dataTable_next" aria-controls="dataTable"  href="javascript:reload('+(currentPage+1)+');"><span aria-hidden="true">»</span></a></li>';
+
+
+                $("#pagination").html(html);
+
+
+///////////////////////////////////////////////////////////////////////
+
+                alert("검색 성공");
+                $("#submit").attr("disabled", true);
+
+
+
+
+            }
+            else{
+                alert("일치하는 사용자가 없습니다.");
+            }
+        });
+    }
+        $("#goSearch").on("click", function(){
+            reload(0);
         });
 
-        $(document).on("click", ".userItem", function(){
-            var r_sn = $(this).data('sn');
-            if(parseInt(r_sn) == -1){
-                alert("신청자가 아닙니다.");
-                return;
-            }
-            $(document).find(".userItem").removeClass('selected');
-            $(this).addClass('selected');
-            $("#r_sn").val(r_sn);
-            $("#submit").attr("disabled", false);
+        $(document).on("change", ".userItem", function(){
+
+            var count = $('.userItem:checked').length;
+            if(count > 0)
+                $("#submit").attr("disabled", false);
+            else
+                $("#submit").attr("disabled", true);
         });
         $(document).on("click", "#submit", function(){
-            var r_sn = $("#r_sn").val();
+            var checked =  $('.userItem:checked');
+            var u_sns = [];
+            $.each(checked, function(pIndex, pValue){
+                u_sns.push($(pValue).data('sn'));
+            });
             var end = $("#date-end").val();
-            console.log(r_sn, end);
+            var start = $("#date-start").val();
             $.ajax({
                 url : '/ajax/processRequest',
                 method : 'POST',
-                data : {'sn' : r_sn, 'end' : end}
+                data : {'u_sns[]' : u_sns, 'end' : end, 'start' : start}
             }).done(function(data){
                 if(data.result == 1){
                     alert("적용되었습니다.");
-                    $("#goSearch").click();
+                    reload(0);
                 }
                 else{
                     alert(data.msg);
@@ -172,7 +308,7 @@
 
     </script>
     <script>
-    setDatepicker = function(id, end='0d'){
+    setDatepicker = function(id, end='+5y'){
         $(id).datepicker({
 		    format: "yyyy-mm-dd",	//데이터 포맷 형식(yyyy : 년 mm : 월 dd : 일 )
 		    startDate: '-5y',	//달력에서 선택 할 수 있는 가장 빠른 날짜. 이전으로는 선택 불가능 ( d : 일 m : 달 y : 년 w : 주)
@@ -198,7 +334,7 @@
 
 		setDatepicker('#date-end');
 		$('#date-end').val(today);
-		setDatepicker('#date-start', today);
+		setDatepicker('#date-start');
 		$('#date-start').val(today);
 
 	});
@@ -266,5 +402,12 @@
             }
           });
         });
+    {% if u_id %}
+        reload(0);
+    {% endif %}
+    {% if type %}
+        reload(0);
+    {% endif %}
+
     </script>
 {% include "admin/common/footer.html" %}

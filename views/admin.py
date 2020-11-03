@@ -22,6 +22,17 @@ def admin_render(menu_name=''):
 
     if isMenu:
         if isLogin:
+            if menu_name=='request':
+                u_id = request.args.get('u_id')
+                type = request.args.get('type')
+                if u_id:
+                    return render_template('admin/{}.html'.format(menu_name), menu=menu_name, menuList=menu_list,
+                                           isLogin=isLogin, u_id=u_id)
+                elif type:
+                    return render_template('admin/{}.html'.format(menu_name), menu=menu_name, menuList=menu_list,
+                                           isLogin=isLogin, type=type)
+
+
             return render_template('admin/{}.html'.format(menu_name), menu=menu_name, menuList=menu_list, isLogin=isLogin)
         else:
             return redirect('/admin/login?menu={}'.format(menu_name))
