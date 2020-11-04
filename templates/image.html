@@ -131,7 +131,7 @@
         getCroppie = function(bound){
             $("#full").show();
             var w = bound[2] - bound[0];
-            var h = bound[3] - bound[1];
+            var h = bound[3] - bound[1] - 4;
             var path = $("#path").val();
                 if(pie){
                     pie.croppie('destroy');

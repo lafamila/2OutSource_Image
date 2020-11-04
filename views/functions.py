@@ -77,8 +77,8 @@ def get_translate(text):
     resj = json.loads(res.text)
     temp = resj["message"]["result"]["translatedText"]
 
-    data["text"] = temp
-    data["source"] = 'en'
+    data["text"] = text
+    data["source"] = 'zh-CN'
     data["target"] = 'ko'
     res = requests.post("https://naveropenapi.apigw.ntruss.com/nmt/v1/translation", headers=headers, data=data)
     resj = json.loads(res.text)
