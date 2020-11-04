@@ -11,7 +11,16 @@
           right: 35px;
           z-index: 5;
         }
-
+        .eng-text{
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-inline-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            word-wrap:break-word;
+             line-height: 1em;
+             height: 1em;
+        }
   </style>
   <div class="container">
     <h1 class="mt-4 mb-3">이미지 번역
@@ -77,7 +86,13 @@
                     <col width="70">
                 </colgroup>
                 <thead>
-
+                    <tr style="color:black;">
+                        <th>감지된 텍스트</th>
+                        <th>
+                            <div style="display:inline-block;width:80%;">영어번역</div>
+                            <div style="display:inline-block;width:19%;">상하조정</div>
+                        </th>
+                    </tr>
                 </thead>
                 <tbody>
 
@@ -131,7 +146,7 @@
         getCroppie = function(bound){
             $("#full").show();
             var w = bound[2] - bound[0];
-            var h = bound[3] - bound[1] - 4;
+            var h = bound[3] - bound[1];
             var path = $("#path").val();
                 if(pie){
                     pie.croppie('destroy');
@@ -197,12 +212,27 @@
         saveData = function(){
             var i = parseInt($("#sn").val());
             var inputs = $("#results").find(".result-input");
+            var margins = $("#results").find(".result-step");
             $.each(inputs, function(pIndex, pValue){
                 var idx = $(pValue).data('idx');
+                var margin = parseInt(margins.eq(pIndex).val());
+                console.log(margin);
                 if($(pValue).parent().parent().css('display') == 'none'){
+                    var bound = imageData[i]['info'][idx][1];
+                    bound[0][1] += margin;
+                    bound[1][1] += margin;
+                    bound[2][1] -= margin;
+                    bound[3][1] -= margin;
+                    imageData[i]['info'][idx][1] = bound;
                     imageData[i]['info'][idx][2] = '#1#2#3#4#5';
                 }
                 else{
+                    var bound = imageData[i]['info'][idx][1];
+                    bound[0][1] += margin;
+                    bound[1][1] += margin;
+                    bound[2][1] -= margin;
+                    bound[3][1] -= margin;
+                    imageData[i]['info'][idx][1] = bound;
                     imageData[i]['info'][idx][2] = $(pValue).val();
                 }
             });
@@ -485,7 +515,10 @@
                 if('#1#2#3#4#5' != pValue[2]){
                 html += '<tr class="'+idx+'_'+pIndex+'">';
                 html += '    <td rowspan="2" style="text-align:left;vertical-align:middle;">'+pValue[0]+'</td>';
-                html += '    <td style="text-align:left;vertical-align:middle;">'+pValue[3]+'</td>';
+                html += '    <td style="text-align:left;vertical-align:middle;">';
+                html += '        <div style="width:80%;" class="eng-text" title="'+pValue[3]+'">'+pValue[3]+'</div>';
+                html += '        <input type="number" step="1" style="width:19%;" class="result-step" data-sn="'+idx+'" data-idx="'+pIndex+'" value="0"/>';
+                html += '    </td>';
                 html += '</tr>';
                 html += '<tr class="'+idx+'_'+pIndex+'">';
                 html += '    <td>';
