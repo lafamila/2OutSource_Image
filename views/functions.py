@@ -265,7 +265,37 @@ def insertMain():
 @fp.route('/showInfo', methods=['POST'])
 def showInfo():
     u_sn = session['u_sn']
-    data = db("SELECT * FROM user WHERE U_SN=%s", u_sn)
+    data = db("SELECT u.*, IFNULL(r.R_TYPE, 'O') AS R_TYPE, r.REGIST_DTM as dtm FROM user u LEFT OUTER JOIN request r ON u.U_SN=r.U_SN AND r.R_SN=IF(u.R_SN < 0, -u.R_SN, u.R_SN) WHERE u.U_SN=%s", u_sn)
+    return jsonify({"result" : 1, "data" : data})
+
+@fp.route('/checkPasswordInfo', methods=['POST'])
+def checkPasswordInfo():
+    u_sn = session['u_sn']
+    pw = request.form.get('pw')
+    data = db("SELECT * FROM user WHERE U_SN=%s AND U_PW=%s", (u_sn, pw))
+    if data:
+        return jsonify({"result" : 1})
+    else:
+        return jsonify({"result" : 0})
+
+@fp.route('/updatePasswordInfo', methods=['POST'])
+def updatePasswordInfo():
+    u_sn = session['u_sn']
+    pw = request.form.get('pw')
+    data = db("UPDATE user SET U_PW=%s WHERE U_SN=%s", (pw, u_sn))
+    if data:
+        return jsonify({"result" : 1})
+    else:
+        return jsonify({"result" : 0})
+
+@fp.route('/updateInfo', methods=['POST'])
+def updateInfo():
+    u_sn = session['u_sn']
+    u_nm = request.form.get('u_nm')
+    u_cp = request.form.get('u_cp')
+    u_phone = request.form.get('u_phone')
+    u_mail = request.form.get('u_mail')
+    data = db("UPDATE user SET U_NM=%s, U_CP=%s, U_PHONE=%s, U_MAIL=%s WHERE U_SN=%s", (u_nm, u_cp, u_phone, u_mail, u_sn))
     return jsonify({"result" : 1, "data" : data})
 
 
@@ -356,6 +386,7 @@ def imageProcess():
             e_result = reader.readtext('.'+img_path)
             es_result = convert(e_result)
             results = find_ch(es_result)
+            print(results)
             data.append({"path" : img_path, "info" : results, "sn" : r['i_sn']})
         return jsonify({"result" : 1, "data" : data})
     else:
@@ -379,14 +410,12 @@ def generateImage():
         img_path = js['path']
         image = cv2.imread('.'+img_path)
         mask = get_mask(result, image)
-        dst = cv2.inpaint(image, mask, 1, cv2.INPAINT_TELEA)
+        dst = cv2.inpaint(image, mask, 1, cv2.INPAINT_NS)
         for text, bound, new_text, _ in result:
             if new_text != "#1#2#3#4#5":
                 info = get_info(bound)
                 x, y = info["start"]
                 w, h = info["width"], info["height"]
-                if h > 25:
-                    h -= 2
 
                 try:
                     sub = Image.fromarray(dst[y:y + h, x:x + w], 'RGB')

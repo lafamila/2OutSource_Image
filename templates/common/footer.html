@@ -1,5 +1,5 @@
 {% if isLogin %}
-<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" style="z-index:2000!important;">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -8,12 +8,89 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
+      <style>
+        .modal-body h6{
+          color:black;
+        }
+        .u_input{
+          cursor:pointer;
+          width:100%;
+        }
+      </style>
       <div class="modal-body">
-        데이터 로딩에 실패했습니다.
+        <div>
+          <h6>기본 정보</h6>
+          <hr/>
+          <table style="width:100%;">
+            <colgroup>
+              <col width="30"/>
+              <col width="70"/>
+            </colgroup>
+            <tbody>
+              <tr>
+                <th>이름</th>
+                <td><input type="text" id="u_nm" class="u_input" value="이경민" disabled></td>
+              </tr>
+              <tr>
+                <th>전화</th>
+                <td><input type="text" id="u_phone" class="u_input" value="01064123292" disabled></td>
+              </tr>
+              <tr>
+                <th>메일</th>
+                <td><input type="text" id="u_mail" class="u_input" value="lafamila@naver.com" disabled></td>
+              </tr>
+              <tr>
+                <th>회사</th>
+                <td><input type="text" id="u_cp" class="u_input" value="호호호" disabled></td>
+              </tr>
+              <tr>
+                <td colspan="2"><br/></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2">
+                    <input type="button" class="btn btn-outline-primary" value="비밀번호 변경하기" id="u_pw"/>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <div>
+          <h6>서비스</h6>
+          <hr/>
+          <div id="u_service"></div>
+        </div>
+        <br/>
+        <br/>
+        <br/>
+        <br/>
+        <div>
+          <h6>결제수단</h6>
+          <hr/>
+          <table style="width:100%;">
+            <colgroup>
+              <col width="20"/>
+              <col width="20"/>
+              <col width="60"/>
+            </colgroup>
+            <tbody>
+              <tr>
+                <th>계좌이체</th>
+                <td style="text-align:right;">신한</td>
+                <td>1111-111111-11111</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
+        <button type="button" class="btn btn-primary" id="u_save">Save changes</button>
       </div>
     </div>
   </div>
@@ -24,10 +101,89 @@
             url : "/ajax/showInfo",
             method : "POST"
         }).done(function(data){
+            console.log(data);
+            var pData = data.data[0];
+            if(pData.r_type == 'O'){
+              $("#u_service").html("<p>이용중인 서비스가 없습니다.</p>");
+            }
+            else{
+              if(pData.r_type == 'F'){
+                $("#u_service").html("<p>무료</p><p>"+pData.u_start+" ~ "+pData.u_end+"</p>");
+              }
+              else{
+                $("#u_service").html("<p>유료</p><p>"+pData.u_start+" ~ "+pData.u_end+"</p>");
+              }
+            }
+            $("#u_nm").val(pData.u_nm);
+            $("#u_phone").val(pData.u_phone);
+            $("#u_cp").val(pData.u_cp);
+            $("#u_mail").val(pData.u_mail);
             $('#exampleModal').modal('show');
         });
     }
+    $(document).on("dblclick", ".u_input", function(){
+      var col = $(this).attr('id');
+      console.log(col);
+      $(this).attr("disabled", false);
+    });
+    $(document).on("click", "#u_pw", function(){
+      var pw = prompt("기존 비밀번호를 입력해주세요.");
+      var params = {"pw" : pw};
+        $.ajax({
+            url : "/ajax/checkPasswordInfo",
+            method : "POST",
+            data : params
+        }).done(function(data){
+          if(data.result == 1){
+            var new_pw = prompt("새로운 비밀번호를 입력해주세요.");
+            if(new_pw.length == 0){
+              alert("입력되지 않았습니다. 비밀번호를 입력해주세요.");
+            }
+            var new_pw_check = prompt("새로운 비밀번호를 한번 더 입력해주세요.");
+            if(new_pw.length > 0 && new_pw == new_pw_check){
+              var params = {"pw" : new_pw};
+              $.ajax({
+                url : "/ajax/updatePasswordInfo",
+                method : "POST",
+                data : params
+              }).done(function(data){
+                alert("저장되었습니다.");
+              });
+            }
+            else{
+              alert("비밀번호가 일치하지 않습니다.");
+            }
 
+          }
+          else{
+            alert("비밀번호가 올바르지 않습니다.");
+          }
+        });
+    });
+    $(document).on("click", "#u_save", function(){
+      var u_nm = $("#u_nm").val();
+      var u_phone = $("#u_phone").val();
+      var u_cp = $("#u_cp").val();
+      var u_mail = $("#u_mail").val();
+      var params = {"u_nm" : u_nm, "u_phone" : u_phone, "u_cp" : u_cp, "u_mail" : u_mail};
+      if(confirm("변경하시겠습니까?")){
+        $.ajax({
+            url : "/ajax/updateInfo",
+            method : "POST",
+            data : params
+        }).done(function(data){
+          if(data.result == 1){
+            $("#u_nm").attr("disabled", true);
+            $("#u_phone").attr("disabled", true);
+            $("#u_cp").attr("disabled", true);
+            $("#u_mail").attr("disabled", true);
+
+            alert("저장되었습니다.");
+
+          }
+        });
+      }
+    });
 </script>
 {% endif %}
 
