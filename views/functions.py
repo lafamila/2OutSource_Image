@@ -379,12 +379,14 @@ def generateImage():
         img_path = js['path']
         image = cv2.imread('.'+img_path)
         mask = get_mask(result, image)
-        dst = cv2.inpaint(image, mask, 3, cv2.INPAINT_TELEA)
+        dst = cv2.inpaint(image, mask, 1, cv2.INPAINT_TELEA)
         for text, bound, new_text, _ in result:
             if new_text != "#1#2#3#4#5":
                 info = get_info(bound)
                 x, y = info["start"]
                 w, h = info["width"], info["height"]
+                if h > 25:
+                    h -= 2
 
                 try:
                     sub = Image.fromarray(dst[y:y + h, x:x + w], 'RGB')

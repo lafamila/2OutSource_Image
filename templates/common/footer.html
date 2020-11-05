@@ -31,10 +31,18 @@
 </script>
 {% endif %}
 
-<div class="quick_icon_wrap" style="bottom:10px;position: fixed;left: 10px;z-index: 1000;" id="plusfriend-chat-button">
-    <a href="https://developers.kakao.com/">
+<div class="quick_icon_wrap" style="bottom:10px;position: fixed;left: 10px;z-index: 1000;cursor:pointer;" id="plusfriend-chat-button">
+    <span>
         <img src="https://developers.kakao.com/assets/img/about/logos/plusfriend/consult_small_yellow_pc.png" alt="플러스친구 1:1 채팅 버튼" title="플러스친구 1:1 채팅 버튼">
-    </a>
+    </span>
 </div>
+
+<script>
+
+  $("#plusfriend-chat-button").on("click", function(){
+    var options = 'top=10, left=10, width=500, height=600, status=no, menubar=no, toolbar=no, resizable=no';
+    window.open("https://developers.kakao.com/", "kakao", options);
+  });
+</script>
 </body>
 </html>
